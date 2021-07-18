@@ -26,8 +26,10 @@ void ApkInstallWorker::run()
 {
     emit started();
 
+    QString res;
+    AdbWrapper().clearFolderOnDevice(m_deviceFolder,res);
+
     m_state = InstallStates::ClearDeviceFolderState;
-//    m_state = InstallStates::WaitPublicKeyState;
 
     while (m_state != InstallStates::CompleteState)
     {

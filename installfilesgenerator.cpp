@@ -21,8 +21,7 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
     QFile aesFile(aesFilePath);
     bool ok = aesFile.open(QIODevice::WriteOnly);
     if(ok){
-        int len = encryptedAes256Key.length();
-        int writed = aesFile.write(encryptedAes256Key);
+        aesFile.write(encryptedAes256Key);
         aesFile.close();
         outList.append(aesFilePath);
     }
@@ -50,7 +49,7 @@ void InstallFilesGenerator::generateFile(const QString &fullPath)
 {
     QFile file(fullPath);
     if(file.open(QIODevice::ReadWrite)){
-        QString data = QString("Mock data content for file:").arg(fullPath);
+        QString data = QString("Mock data content for file:'%1'").arg(fullPath);
         file.write(data.toLatin1());
         file.close();
     }
