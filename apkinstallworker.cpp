@@ -31,6 +31,7 @@ void ApkInstallWorker::run()
 
     m_state = InstallStates::ClearDeviceFolderState;
 
+    //m_state = InstallStates::WaitPublicKeyState;
     while (m_state != InstallStates::CompleteState)
     {
         QThread::msleep(10);

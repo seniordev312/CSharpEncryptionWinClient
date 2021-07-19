@@ -277,14 +277,21 @@ QByteArray MainView::generateAES256Key()
 
     return ba;
 }
-
+#include <QDir>
 void MainView::installApkOnDevice()
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
     QString packageName = "com.example.testrsaencryption/.MainActivity";
     QString deviceFoder = "/storage/emulated/0/tmp";
     QString pubFileName = "key.pub";
-    QString localFolder = "c:/tmp";
+
+    QString tmpFolder = qApp->applicationDirPath()+"/tmp";
+    if(!QFile::exists(tmpFolder)){
+        QDir dir;
+        dir.mkpath(tmpFolder);
+    }
+
+    QString localFolder = tmpFolder;
 
     if(m_worker == nullptr){
         m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder);
