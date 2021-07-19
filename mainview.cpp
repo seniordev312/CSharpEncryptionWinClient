@@ -16,6 +16,7 @@
 #include <QFileInfo>
 #include <QRandomGenerator>
 #include <QThreadPool>
+#include <QDir>
 
 #include "adbwrapper.h"
 
@@ -41,7 +42,6 @@ MainView::MainView(QWidget* parent): QWidget(parent)
     vLayout->addWidget( m_output = new QTextEdit(),1 );
 
     connect(m_sendApkRequest, &QPushButton::clicked, this, &MainView::sendApkRequest);
-    connect(m_encryptButton, &QPushButton::clicked, this, &MainView::onCopyFromDevice);
     connect(m_installApkButton, &QPushButton::clicked, this, &MainView::installApkOnDevice);
     connect(m_stopInstallButton, &QPushButton::clicked, this, &MainView::onStopInstall);
 
@@ -61,7 +61,6 @@ void MainView::generateRsa()
 
 void MainView::sendApkRequest()
 {
-
     //generate RSA
     writeLog("Generate RSA...");
     m_rsaEncryption.generate();
@@ -181,103 +180,7 @@ void MainView::writeLog(const QString &msg)
     m_output->append(msg);
 }
 
-void MainView::onCopyFromDevice()
-{
-    //Copy file from
 
-    QString deviceFolder = "/storage/emulated/0/tmp";
-    QString keyFileName = "key_1.pub";
-    QString localFolder = "C:/tmp";
-
-    QString publicKeyPath = QString("%1/%2").arg(localFolder).arg(keyFileName);
-
-    AdbWrapper adbWrapper;
-    bool ok = adbWrapper.copyFileFromDevice(QString("%1/%2").arg(deviceFolder).arg(keyFileName),localFolder);
-    if(!ok){
-        writeLog("[FAILED] copyFileFromDevice");
-        return;
-    }else{
-        writeLog("[OK] copyFileFromDevice");
-    }
-
-    //QFile file
-    QFile publicKeyFile(publicKeyPath);
-    if(!publicKeyFile.open(QIODevice::ReadOnly)){
-        writeLog(QString("Failed open file:%1").arg(publicKeyPath));
-        return;
-    }
-
-    QByteArray keyData = publicKeyFile.readAll();
-    publicKeyFile.close();
-
-    qInfo()<<"keyData:"<<QString(keyData);
-
-    QByteArray aes256Key = generateAES256Key();
-//    QByteArray hello = QString("Hello!!!").toLatin1();
-//    for(int i = 0; i<hello.length();i++){
-//        aes256Key[i] = hello[i];
-//    }
-
-    QByteArray encryptedData = RsaEncryption::encryptData(keyData, aes256Key);
-
-    if(!encryptedData.isEmpty()){
-        writeLog("[OK] Encrypt AES265 key");
-        QString encodedFilePath = QString("%1/encoded.data").arg(localFolder);
-        QFile encodedFile(encodedFilePath);
-        if(!encodedFile.open(QIODevice::WriteOnly)){
-            writeLog(QString("[FAILED] open file for wirte:%1").arg(encodedFilePath));
-            return ;
-        }
-        encodedFile.write(encryptedData);
-        encodedFile.close();
-
-        ok = adbWrapper.copyFileToDevice(encodedFilePath, deviceFolder);
-        if(!ok){
-            writeLog("[FAILED] copyFileToDevice");
-        }else{
-            writeLog("[OK] copyFileToDevice");
-        }
-
-    }else{
-        writeLog("[FAILED] Encrypt AES265 key");
-        return;
-    }
-
-    QString sourceTestFile = QString("%1/%2").arg(localFolder).arg("test_enc.txt");
-    QString encodedTestFile = QString("%1/%2").arg(localFolder).arg("test_encoded.data");
-    //Encode test files
-    AesEncryption aesEnc;
-    //ok = aesEnc.encryptFile(sourceTestFile, aes256Key,encodedTestFile ) == 0;
-    ok = aesEnc.encrypt(sourceTestFile, aes256Key,encodedTestFile ) == 0;
-    if(ok){
-        writeLog("[OK] Encrypt AES256 CBC");
-    }else{
-        writeLog("[FAILED] Encrypt AES256 CBC");
-        return;
-    }
-
-    //Copy file to device
-
-    ok = adbWrapper.copyFileToDevice(encodedTestFile, deviceFolder);
-    if(ok){
-        writeLog(QString("[OK] copyFileToDevice:%1").arg(encodedTestFile));
-    }else{
-        writeLog(QString("[FAILED] copyFileToDevice:%1").arg(encodedTestFile));
-    }
-
-}
-
-QByteArray MainView::generateAES256Key()
-{
-    const int l = 32;
-    QByteArray ba = QByteArray(l, 0);
-    for(int i = 0; i < l;i++){
-        ba[i] = static_cast<char>(QRandomGenerator::system()->bounded(255));
-    }
-
-    return ba;
-}
-#include <QDir>
 void MainView::installApkOnDevice()
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";

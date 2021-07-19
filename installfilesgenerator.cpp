@@ -12,9 +12,11 @@ InstallFilesGenerator::InstallFilesGenerator(const QString &folder):m_folder(fol
 bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList &outList)
 {
     QByteArray aes256Key = generateAES256Key();
+    QByteArray iv = generateIV();
+    iv.append(aes256Key);
 
     //Encrypt key
-    QByteArray encryptedAes256Key = RsaEncryption::encryptData(rsaPulicKey, aes256Key);
+    QByteArray encryptedAes256Key = RsaEncryption::encryptData(rsaPulicKey, iv);
 
     //Save to file
     QString aesFilePath = QString("%1/aes.key").arg(m_folder);
@@ -35,7 +37,7 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
             generateFile(sourceFile);
             //encode file
             QString encodedFile = QString("%1/%2.encoded").arg(m_folder).arg(baseFileName);
-            ok = (encryption.encrypt(sourceFile, aes256Key,encodedFile) == 0);
+            ok = (encryption.encrypt(sourceFile,encodedFile, aes256Key, iv) == 0);
             QFile::remove(sourceFile);
             outList.append(encodedFile);
             if(!ok){break;}
@@ -58,6 +60,17 @@ void InstallFilesGenerator::generateFile(const QString &fullPath)
 QByteArray InstallFilesGenerator::generateAES256Key()
 {
     const int l = 32;
+    QByteArray ba = QByteArray(l, 0);
+    for(int i = 0; i < l;i++){
+        ba[i] = static_cast<char>(QRandomGenerator::system()->bounded(255));
+    }
+
+    return ba;
+}
+
+QByteArray InstallFilesGenerator::generateIV()
+{
+    const int l = 16;
     QByteArray ba = QByteArray(l, 0);
     for(int i = 0; i < l;i++){
         ba[i] = static_cast<char>(QRandomGenerator::system()->bounded(255));

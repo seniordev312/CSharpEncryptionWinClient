@@ -12,7 +12,10 @@
 #include <openssl/evp.h>
 #include <openssl/evperr.h>
 
+
 const int BUFSIZE = 100;
+#define AES_256_KEY_SIZE 32
+
 //docs:
 //
 //https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS#5_and_PKCS#7
@@ -91,7 +94,32 @@ int AesEncryption::dectyptFile(const QString& encodedFilePath, const QByteArray&
     return 0;
 }
 
-int AesEncryption::encrypt(const QString &sourceFilePath, const QByteArray &key, const QString &encodedFilePath)
+int AesEncryption::decrypt(const QString &encodedFilePath, const QString &decodedFilePath,const QByteArray &key, const QByteArray &iv)
+{
+    QFile inputFile(encodedFilePath);
+    if (!inputFile.open(QIODevice::ReadOnly)) {
+        qCritical() << "Open file " << encodedFilePath <<" failed";
+        return -1;
+    }
+
+
+    QFile outFile(decodedFilePath);
+    if(!outFile.open(QIODevice::WriteOnly)){
+        qCritical() << "Open file " << decodedFilePath <<" failed";
+        return -1;
+    }
+
+    cipher_params_t params;
+    params.key = (unsigned char*)key.data();
+    params.iv = (unsigned char*)iv.data();
+    params.encrypt = 0;
+    params.cipher_type = EVP_aes_256_cbc();
+    file_encrypt_decrypt( &params, &inputFile, &outFile);
+
+    return 0;
+}
+
+int AesEncryption::encrypt(const QString &sourceFilePath, const QString &encodedFilePath, const QByteArray &key, const QByteArray &iv)
 {
     QFile inputFile(sourceFilePath);
     if (!inputFile.open(QIODevice::ReadOnly)) {
@@ -107,14 +135,8 @@ int AesEncryption::encrypt(const QString &sourceFilePath, const QByteArray &key,
     }
 
     cipher_params_t params;
-    unsigned char iv[AES_BLOCK_SIZE];
-    RAND_bytes(iv, AES_BLOCK_SIZE);
-
-    //write iv in first bytes
-    inputFile.write((char*)&iv[0],AES_BLOCK_SIZE);
-
     params.key = (unsigned char*)key.data();
-    params.iv = &iv[0];
+    params.iv = (unsigned char*)iv.data();
     params.encrypt = 1;
     params.cipher_type = EVP_aes_256_cbc();
     file_encrypt_decrypt( &params, &inputFile, &outFile);
@@ -149,7 +171,7 @@ void AesEncryption::file_encrypt_decrypt(cipher_params_t *params, QFile *ifp, QF
         cleanup(params, ifp, ofp);
     }
 
-    //OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_256_KEY_SIZE);
+    OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_256_KEY_SIZE);
     OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == AES_BLOCK_SIZE);
 
     /* Now we can set key and IV */

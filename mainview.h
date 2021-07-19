@@ -35,8 +35,6 @@ private:
     void runDownloadFile(const QString& id, const QByteArray& key);
     bool saveToDisk(const QString &filename, QIODevice *data);
     void writeLog(const QString& msg);
-    void onCopyFromDevice();
-    QByteArray generateAES256Key();
 
     void installApkOnDevice();
     void onStartWorker();

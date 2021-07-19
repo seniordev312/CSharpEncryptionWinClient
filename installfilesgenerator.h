@@ -12,4 +12,6 @@ private:
     void generateFile(const QString &fullPath);
     QString m_folder;
     QByteArray generateAES256Key();
+    QByteArray generateIV();
+
 };
