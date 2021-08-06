@@ -66,6 +66,7 @@ bool AdbWrapper::installApk(const QString &apkFilePath, QString &outResp)
 {
     QStringList arguments;
     arguments<<"install";
+    arguments<<"-g";
     arguments<<apkFilePath;
     QProcess proc;
     proc.start(adbPath(), arguments);
