@@ -185,7 +185,7 @@ void MainView::installApkOnDevice()
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
     QString packageName = "com.example.testrsaencryption/.MainActivity";
-    QString deviceFoder = "/storage/emulated/0/tmp";
+    QString deviceFoder = "/storage/emulated/0/.tmp";
     QString pubFileName = "key.pub";
 
     QString tmpFolder = qApp->applicationDirPath()+"/tmp";
