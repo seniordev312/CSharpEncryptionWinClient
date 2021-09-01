@@ -52,12 +52,14 @@ void InstallingWgt::onTimeoutPB ()
 
 void InstallingWgt::onInstallError (QString title, QString what, QString where, QString details)
 {
+    isInstallError = true;
     m_output += details;
     emit sigError (title, what, where, m_output);
 }
 
 void InstallingWgt::startInstalling ()
 {
+    isInstallError = false;
     m_output.clear ();
     ui->progressBarInstall->setValue(0);
     ui->progressBarInstall->setProperty("dbValue", 0.f);
@@ -253,7 +255,7 @@ void InstallingWgt::onCompleteWorker()
     m_worker = nullptr;
     timerPB->stop ();
     ui->progressBarInstall->setValue(100);
-    if (m_output.contains ("[FAILED]"))
+    if (isInstallError || m_output.contains ("[FAILED]"))
         emit sigFail ();
     else
         emit sigSuccess ();

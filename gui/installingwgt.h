@@ -63,6 +63,8 @@ private:
 
     QTimer * timerPB {nullptr};
 
+    bool isInstallError {false};
+
 private slots:
     void onTimeoutPB ();
 
