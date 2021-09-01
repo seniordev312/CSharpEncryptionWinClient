@@ -53,3 +53,6 @@ Thumbs.db
 build
 bin
 
+# server test
+server_test/
+
