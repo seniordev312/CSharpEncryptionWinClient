@@ -79,7 +79,7 @@
         <item>
          <widget class="QLineEdit" name="lineEditBusinessPhone">
           <property name="placeholderText">
-           <string>Business Phone*</string>
+           <string>Business Phone</string>
           </property>
          </widget>
         </item>
@@ -135,7 +135,7 @@
           <item row="0" column="0">
            <widget class="QLabel" name="labelParentalBlock">
             <property name="text">
-             <string>Parental Block*</string>
+             <string>Parental Block</string>
             </property>
            </widget>
           </item>
@@ -404,14 +404,14 @@
            <number>15</number>
           </property>
           <item row="1" column="0">
-           <widget class="QLabel" name="labelMeshimer">
+           <widget class="QLabel" name="labelFilterLevel">
             <property name="text">
-             <string>Meshimer</string>
+             <string>Filter Level*</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QComboBox" name="comboBoxMeshimer">
+           <widget class="QComboBox" name="comboBoxFilterLevel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -436,6 +436,11 @@
             <item>
              <property name="text">
               <string>Talk Only</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Talk Only - Kids Safe</string>
              </property>
             </item>
            </widget>
@@ -472,7 +477,7 @@
             </item>
             <item>
              <property name="text">
-              <string>Secure</string>
+              <string>Sekure</string>
              </property>
             </item>
            </widget>

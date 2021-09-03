@@ -6,6 +6,7 @@
 
 #include "settingkeys.h"
 #include "errorhandlingdlg.h"
+#include "utils.h"
 
 MainWgt::MainWgt(QWidget *parent) :
     QWidget(parent),
@@ -42,6 +43,8 @@ MainWgt::MainWgt(QWidget *parent) :
     {
         connect (ui->deviceInfo, &DeviceInfoWgt::sigError,
                  this, &MainWgt::onErrorHandling);
+        connect (ui->deviceInfo, &DeviceInfoWgt::sigDevInfo,
+                 this, &MainWgt::onDevInfo);
     }
 
     //bottom widget
@@ -52,9 +55,20 @@ MainWgt::MainWgt(QWidget *parent) :
                  this, &MainWgt::goToNextStep);
         connect (ui->pushButtonStart, &QPushButton::clicked,
                  this, &MainWgt::onStart);
+        connect (ui->pushButtonStartNew, &QPushButton::clicked,
+                 this, &MainWgt::onStartNew);
     }
 
     goToNextStep ();
+}
+
+void MainWgt::onDevInfo (const DeviceInfoWgt::DeviceInfo & info)
+{
+    changeProperty (ui->labelDeviceStatusValue, "Status", info.isConnected ? "success" : "fail");
+    if (info.isConnected)
+        ui->labelDeviceStatusValue->setText ("CONNECTED");
+    else
+        ui->labelDeviceStatusValue->setText ("DEVICE NOT DETECTED");
 }
 
 void MainWgt::onErrorHandling (QString title, QString what, QString where, QString details)
@@ -77,6 +91,12 @@ void MainWgt::onFailInstall ()
 
 void MainWgt::onLogout ()
 {
+    //clear old info
+    {
+        ui->deviceInfo->init ();
+        ui->customerInfo->init ();
+    }
+
     curStep = SignUpSteps::login_signup;
     goToCurStep ();
 }
@@ -84,6 +104,17 @@ void MainWgt::onLogout ()
 void MainWgt::onStart ()
 {
     curStep = SignUpSteps::installing;
+    goToCurStep ();
+}
+
+void MainWgt::onStartNew ()
+{
+    //clear old info
+    {
+        ui->deviceInfo->init ();
+        ui->customerInfo->init ();
+    }
+    curStep = SignUpSteps::deviceInfo;
     goToCurStep ();
 }
 
@@ -111,7 +142,7 @@ void MainWgt::goToCurStep ()
         stepWgt->setMode("Current");
     }
 
-    for(int i=iStep+1; i<static_cast<int>(SignUpSteps::num_steps); i++) {
+    for(int i=iStep+1; i<=static_cast<int>(SignUpSteps::num_steps); i++) {
         auto stepWgt = findChild<StepWgt *>("widgetStep" + QString::number(i));
         stepWgt->setMode("NotCompleted");
     }
@@ -125,9 +156,9 @@ void MainWgt::goToCurStep ()
     ui->pushButtonLogout->show ();
     ui->pushButtonStart->show ();
     ui->pushButtonNext->hide ();
+    ui->pushButtonStartNew->hide ();
     ui->pushButtonLogout->setEnabled (true);
     ui->pushButtonStart->setEnabled (true);
-    ui->pushButtonStart->setText ("Start");
 
     if(curStep == SignUpSteps::login_signup) {
         ui->labelStatus->setText ("Not logged in");
@@ -151,7 +182,8 @@ void MainWgt::goToCurStep ()
     }
     else if(curStep == SignUpSteps::finished) {
         ui->stackedWidgetWorkArea->setCurrentWidget (ui->finished);
-        ui->pushButtonStart->setText ("Start New");
+        ui->pushButtonStart->hide ();
+        ui->pushButtonStartNew->show ();
     }
 }
 

@@ -13,7 +13,10 @@ class CustomerInfoWgt : public QWidget
 
 public:
     explicit CustomerInfoWgt(QWidget *parent = nullptr);
+
     ~CustomerInfoWgt();
+
+    void init ();
 
 private:
     Ui::CustomerInfoWgt *ui;

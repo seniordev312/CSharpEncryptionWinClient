@@ -29,15 +29,36 @@ LoginWgt::LoginWgt(QWidget *parent) :
 
     ui->lineEditPassword->setEchoMode (QLineEdit::Password);
 
+    //event filter
+    ui->lineEditEmail->installEventFilter (this);
+    ui->lineEditPassword->installEventFilter (this);
+
     //ui to future
     ui->labelForgotPassword->hide ();
 
 }
 
+bool LoginWgt::eventFilter (QObject *watched, QEvent *event)
+{
+    if (QEvent::KeyRelease == event->type ()
+        && (ui->lineEditEmail == watched || ui->lineEditPassword == watched)) {
+
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        if (Qt::Key_Return == keyEvent->key ()
+            && ui->pushButtonLogin->isEnabled ()) {
+            onLogin ();
+            return true;
+        }
+    }
+    return QWidget::eventFilter (watched, event);
+}
+
 void LoginWgt::onQuestion ()
 {
     auto mode = ui->lineEditPassword->echoMode ();
-    ui->lineEditPassword->setEchoMode (mode == QLineEdit::Normal ? QLineEdit::Password : QLineEdit::Normal);
+    bool onView = mode == QLineEdit::Normal;
+    ui->lineEditPassword->setEchoMode (onView ? QLineEdit::Password : QLineEdit::Normal);
+    changeProperty (ui->pushButtonQuestion, "visiblePassw", !onView);
 }
 
 void LoginWgt::checkConditionsLogin ()
@@ -68,6 +89,7 @@ void LoginWgt::clear ()
     auto lineEdits = findChildren<QLineEdit *>();
     foreach (auto edit, lineEdits)
         edit->clear ();
+    ui->labelLoginStatus->clear ();
 }
 
 void LoginWgt::showEvent(QShowEvent *event)

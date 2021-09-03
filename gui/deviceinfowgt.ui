@@ -47,7 +47,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>IMEI*:</string>
+         <string>IMEI:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -76,7 +76,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Manufacturer*:</string>
+         <string>Manufacturer:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -108,7 +108,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Model*:</string>
+         <string>Model:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -124,7 +124,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Version*:</string>
+         <string>Version:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -140,7 +140,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Serial Number*:</string>
+         <string>Serial Number:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -156,7 +156,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Device Phone Number (if applicable):</string>
+         <string>Device Phone Number:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

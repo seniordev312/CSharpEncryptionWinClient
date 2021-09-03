@@ -158,8 +158,11 @@ QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError
     QString res;
     for (int i=1; i<=30; i++) {
         res = callIphonesubinfo(QString::number(i), isError, error);
-        if (res.contains('+'))
-            break;
+        if (res.contains (QRegularExpression("\\+(\\d){7}")))
+        {
+            if (!res.contains (QRegularExpression ("[A-Z]|[a-z]")))
+                break;
+        }
         else
             res.clear();
     }

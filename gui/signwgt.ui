@@ -384,6 +384,9 @@
         <property name="flat">
          <bool>true</bool>
         </property>
+        <property name="visiblePassw" stdset="0">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item>

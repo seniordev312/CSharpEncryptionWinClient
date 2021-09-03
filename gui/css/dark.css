@@ -43,17 +43,20 @@ QLabel#labelDescription[NotLinkLS_wgt=true]
 }
 
 
-StepWgt .QCheckBox::indicator {
-    width: 18px;
-    height: 18px;
+QPushButton[visiblePassw=false]
+{
+    min-width: 20px;
+    max-width: 20px;
+    qproperty-icon:url(:/gui/icons/visibleOff.png);
+    qproperty-iconSize: 20px;
 }
 
-StepWgt .QCheckBox::indicator:unchecked {
-    image: url(:/icons/CheckBox_off.png);
-}
-
-StepWgt .QCheckBox::indicator:checked {
-    image: url(:/icons/CheckBox_on.png);
+QPushButton[visiblePassw=true]
+{
+    min-width: 20px;
+    max-width: 20px;
+    qproperty-icon:url(:/gui/icons/visibleOn.png);
+    qproperty-iconSize: 20px;
 }
 
 QScrollBar:vertical {
@@ -151,7 +154,26 @@ StepWgt .QLabel#labelDescription[mode=NotCompleted]
     color: #808080;
 }
 
+StepWgt .QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+StepWgt .QCheckBox::indicator:unchecked {
+    image: url(:/icons/CheckBox_off.png);
+}
+
+StepWgt .QCheckBox::indicator:checked {
+    image: url(:/icons/CheckBox_on.png);
+}
+
 /**************************** MainWgt *****************************************/
+
+MainWgt .QFrame#frameDeviceStatus
+{
+    border: 2px solid grey;
+    background-color:lightgrey;
+}
 
 MainWgt .QFrame#frameSteps
 {
@@ -188,29 +210,6 @@ MainWgt .QWidget#wgtBottom .QLabel#labelStatus
     font-size: 16px;
     color: white;
 }
-
-/**************************** SignWgt *****************************************/
-
-
-SignWgt .QPushButton#pushButtonQuestion
-{
-    min-width: 20px;
-    max-width: 20px;
-    qproperty-icon:url(:/gui/icons/question.png);
-    qproperty-iconSize: 20px;
-}
-
-/**************************** LoginWgt *****************************************/
-
-
-LoginWgt .QPushButton#pushButtonQuestion
-{
-    min-width: 20px;
-    max-width: 20px;
-    qproperty-icon:url(:/gui/icons/question.png);
-    qproperty-iconSize: 20px;
-}
-
 
 /**************************** CustomerInfoWgt *****************************************/
 

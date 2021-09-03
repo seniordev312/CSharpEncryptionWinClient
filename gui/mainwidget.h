@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "gui/deviceinfowgt.h"
+
 namespace Ui {
 class MainWgt;
 }
@@ -35,11 +37,15 @@ private slots:
 
     void onStart ();
 
+    void onStartNew ();
+
     void onSuccessInstall ();
 
     void onFailInstall ();
 
     void onErrorHandling (QString title, QString what, QString where, QString details);
+
+    void onDevInfo (const DeviceInfoWgt::DeviceInfo & info);
 
 };
 

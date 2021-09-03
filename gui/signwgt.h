@@ -18,6 +18,9 @@ public:
 
     void clear ();
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private:
     Ui::SignWgt *ui;
 

@@ -14,14 +14,16 @@ class LoginWgt : public QWidget
     Q_OBJECT
 
 public:
-    explicit LoginWgt(QWidget *parent = nullptr);
+    explicit LoginWgt (QWidget *parent = nullptr);
 
-    ~LoginWgt();
+    ~LoginWgt ();
 
     void clear ();
 
 protected:
-    void showEvent(QShowEvent *event);
+    void showEvent (QShowEvent *event) override;
+
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     Ui::LoginWgt *ui;

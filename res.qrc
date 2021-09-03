@@ -6,5 +6,7 @@
         <file>gui/icons/Step_not_completed.png</file>
         <file>gui/icons/question.png</file>
         <file>gui/icons/error.png</file>
+        <file>gui/icons/visibleOff.png</file>
+        <file>gui/icons/visibleOn.png</file>
     </qresource>
 </RCC>

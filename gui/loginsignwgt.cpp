@@ -38,6 +38,7 @@ LoginSignWgt::LoginSignWgt (QWidget *parent) :
     {
         QSettings settings;
         QWidget * curWgt = ui->login;
+#if 0
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         if (!settings.value(defAppEmail).canConvert (QMetaType (QMetaType::QString)) ||
             !settings.value(defAppPassword).canConvert (QMetaType (QMetaType::QString)) ||
@@ -48,6 +49,7 @@ LoginSignWgt::LoginSignWgt (QWidget *parent) :
             !settings.value(defAppName).canConvert (QMetaType::QString))
 #endif
             curWgt = ui->signUp;
+#endif
         ui->stackedWidget->setCurrentWidget(curWgt);
     }
 }

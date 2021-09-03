@@ -5,6 +5,8 @@
 #include <QFutureWatcher>
 #include <QProcess>
 
+class QTimer;
+
 namespace Ui {
 class DeviceInfoWgt;
 }
@@ -39,12 +41,16 @@ public:
 
     };
 
+    void init ();
+
 private:
     Ui::DeviceInfoWgt *ui;
 
     DeviceInfo updateDevInfo ();
 
     QFutureWatcher <DeviceInfo> devInfoFutureWatcher;
+
+    QTimer * timerUpdate {nullptr};
 
 private slots:
     void onDevInfoUpdated ();
@@ -53,6 +59,9 @@ private slots:
 
 signals:
     void sigError (QString title, QString what, QString where, QString details);
+
+    void sigDevInfo (const DeviceInfoWgt::DeviceInfo & info);
+
 };
 
 Q_DECLARE_METATYPE(DeviceInfoWgt::DeviceInfo);

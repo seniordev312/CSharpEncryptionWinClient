@@ -2,6 +2,7 @@
 #include "ui_signwgt.h"
 
 #include <QSettings>
+#include <QKeyEvent>
 
 #include "utils.h"
 #include "settingkeys.h"
@@ -37,11 +38,40 @@ SignWgt::SignWgt(QWidget *parent) :
     ui->pushButtonInvitationCode->setEnabled (false);
     ui->lineEditPassword->setEchoMode (QLineEdit::Password);
     ui->lineEditRetypePassword->setEchoMode (QLineEdit::Password);
+
+    //event filters
+    ui->lineEditInvitationCode->installEventFilter (this);
+    ui->lineEditPassword->installEventFilter (this);
+    ui->lineEditName->installEventFilter (this);
+    ui->lineEditEmail->installEventFilter (this);
+    ui->lineEditRetypePassword->installEventFilter (this);
 }
 
-SignWgt::~SignWgt()
+SignWgt::~SignWgt ()
 {
     delete ui;
+}
+
+bool SignWgt::eventFilter (QObject *watched, QEvent *event)
+{
+    if (QEvent::KeyRelease == event->type () ) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        if (ui->lineEditInvitationCode == watched) {
+            if (Qt::Key_Return == keyEvent->key ()
+                && ui->pushButtonInvitationCode->isEnabled ()) {
+                onSend ();
+                return true;
+            }
+        }
+        else {
+            if (Qt::Key_Return == keyEvent->key ()
+                && ui->pushButtonSignUp->isEnabled ()) {
+                onSignUp ();
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter (watched, event);
 }
 
 void SignWgt::clear ()
@@ -50,6 +80,7 @@ void SignWgt::clear ()
     foreach (auto edit, lineEdits)
         edit->clear ();
     ui->labelStatusInvitationCode->clear ();
+    ui->checkBoxTermsPrivacy->setChecked (false);
 }
 
 void SignWgt::onSignUp ()
