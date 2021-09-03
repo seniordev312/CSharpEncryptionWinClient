@@ -39,6 +39,8 @@ InstallingWgt::InstallingWgt(QWidget *parent) :
 
 InstallingWgt::~InstallingWgt()
 {
+    if (tmp_dir)
+        delete tmp_dir;
     delete ui;
 }
 
@@ -159,15 +161,11 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
                 writeLog(QString("[OK] Save file to:'%1'").arg(encodedFilePath));
                 //try decrypt
                 AesEncryption aes;
-                QFileInfo fi(encodedFilePath);
-                decryptedFile = appFolder+"/"+fi.completeBaseName()+"_decoded_."+fi.completeSuffix();
 
-                int ret = aes.dectyptFile(encodedFilePath, key, decryptedFile);
-                if(ret == 0){
-                    writeLog( QString("[OK] Decrypt file to:'%1'").arg(decryptedFile));
-                    installApkOnDevice ();
-                }else{
-                    writeLog( QString("[FAILED] Decrypt file:'%1'").arg(encodedFilePath));
+                tmp_dir = new QTemporaryDir ();
+
+                if (!tmp_dir->isValid ()) {
+                    writeLog ( QString ("[FAILED] Error while creating tmp file"));
                     emit sigFail ();
                     onInstallError ("Error: Decryption",
                                     "Decryption error: error occured while file decription",
@@ -175,7 +173,26 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
                                     "section to get more detailed information about the error.",
                                     m_output);
                 }
+                else {
+                    tmp_file = tmp_dir->path () + "/apkserver.apk";
 
+                    int ret = aes.dectyptFile(encodedFilePath, key, tmp_file);
+                    if(ret == 0){
+                        writeLog( QString("[OK] Decrypt file"));
+                        installApkOnDevice ();
+                    }else{
+                        writeLog( QString("[FAILED] Decrypt file"));
+                        emit sigFail ();
+                        onInstallError ("Error: Decryption",
+                                        "Decryption error: error occured while file decription",
+                                        "An error occured while file decription. See \"Details\"\n"
+                                        "section to get more detailed information about the error.",
+                                        m_output);
+                        delete tmp_dir;
+                        tmp_dir = nullptr;
+                        tmp_file.clear ();
+                    }
+                }
                 //remove encoded file
                 QFile::remove(encodedFilePath);
 
@@ -220,10 +237,10 @@ void InstallingWgt::writeLog(const QString &msg)
 }
 
 
-void InstallingWgt::installApkOnDevice()
+void InstallingWgt::installApkOnDevice ()
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
-    apkFilaPath = decryptedFile;
+    apkFilaPath = tmp_file;
     QString packageName = "com.example.testrsaencryption/.MainActivity";
     QString deviceFoder = "/storage/emulated/0/.tmp";
     QString pubFileName = "key.pub";
@@ -252,6 +269,10 @@ void InstallingWgt::onStartWorker()
 
 void InstallingWgt::onCompleteWorker()
 {
+    if (tmp_dir)
+        delete tmp_dir;
+    tmp_file.clear ();
+    tmp_dir = nullptr;
     m_worker = nullptr;
     timerPB->stop ();
     ui->progressBarInstall->setValue(100);

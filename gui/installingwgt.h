@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QThreadPool>
+#include <QTemporaryDir>
 
 #include "rsaencryption.h"
 
@@ -51,7 +52,7 @@ private:
 
     void writeLog(const QString& msg);
 
-    void installApkOnDevice();
+    void installApkOnDevice ();
 
     void onStartWorker();
 
@@ -59,11 +60,13 @@ private:
 
     void onStopInstall();
 
-    QString decryptedFile;
-
     QTimer * timerPB {nullptr};
 
     bool isInstallError {false};
+
+    QString tmp_file;
+
+    QTemporaryDir * tmp_dir {nullptr};
 
 private slots:
     void onTimeoutPB ();
