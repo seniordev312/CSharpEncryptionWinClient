@@ -98,7 +98,7 @@
       <item>
        <widget class="QPushButton" name="pushButtonLogin">
         <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
+         <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
          <string>Login</string>
@@ -270,7 +270,9 @@
   </layout>
  </widget>
  <tabstops>
+  <tabstop>lineEditEmail</tabstop>
   <tabstop>pushButtonLogin</tabstop>
+  <tabstop>lineEditPassword</tabstop>
  </tabstops>
  <resources/>
  <connections/>

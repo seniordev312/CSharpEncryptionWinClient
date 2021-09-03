@@ -56,7 +56,7 @@
       <item>
        <widget class="QPushButton" name="pushButtonSignUp">
         <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
+         <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
          <string>Sign up</string>
@@ -121,6 +121,9 @@
       </property>
       <item>
        <widget class="QCheckBox" name="checkBoxTermsPrivacy">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -144,6 +147,9 @@
       </item>
       <item>
        <widget class="QLabel" name="labelTermsPrivacy">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>I agree to the &lt;a href=https://google.com&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Terms of Use&lt;/span&gt;&lt;/a&gt; and &lt;a href=https://google.com&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Privacy Policy&lt;/span&gt;&lt;/a&gt;</string>
         </property>
@@ -218,6 +224,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButtonInvitationCode">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>Send</string>
         </property>
@@ -378,6 +387,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -418,6 +430,9 @@
        <width>0</width>
        <height>0</height>
       </size>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
      </property>
      <property name="text">
       <string/>
@@ -530,6 +545,9 @@
        <height>0</height>
       </size>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -540,6 +558,13 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEditInvitationCode</tabstop>
+  <tabstop>lineEditName</tabstop>
+  <tabstop>lineEditEmail</tabstop>
+  <tabstop>lineEditPassword</tabstop>
+  <tabstop>lineEditRetypePassword</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
