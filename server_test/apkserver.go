@@ -43,6 +43,15 @@ type ApkResponse struct {
 	Id  string
 }
 
+type ApkData struct {
+	UserEmail  		string
+	Password  		string
+	Id  			string
+	File_key		string
+	File_passcode 	string
+	File_challenge 	string
+}
+
 type UserInfo struct {
 	UserName  				string
 	UserEmail  				string
@@ -258,8 +267,8 @@ func insertRedeemInivation(inivationIn string) error {
 	return nil
 }
 
-func insertApkKey(apkKeyVar ApkResponse) error {
-	query := "INSERT INTO apkKeys(apk_id, key) VALUES (?, ?)"
+func insertApkData(apkDataVar ApkData) error {
+	query := "INSERT INTO apkData(apk_id, file_passcode, file_challenge, file_key) VALUES (?, ?, ?, ?)"
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelfunc()
 	stmt, err := db.PrepareContext(ctx, query)
@@ -268,7 +277,25 @@ func insertApkKey(apkKeyVar ApkResponse) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err= stmt.ExecContext(ctx, apkKeyVar.Id, apkKeyVar.Key)
+	_, err= stmt.ExecContext(ctx, apkDataVar.Id, apkDataVar.File_passcode, apkDataVar.File_challenge, apkDataVar.File_key)
+	if err != nil {
+		log.Printf("Error %s when inserting row into apkKeys table", err)
+		return err
+	}
+	return nil
+}
+
+func insertApkKeys(apkDataVar ApkResponse) error {
+	query := "INSERT INTO apkKeys(apk_id, apk_key) VALUES (?, ?)"
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		log.Printf("Error %s when preparing SQL statement", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err= stmt.ExecContext(ctx, apkDataVar.Id, apkDataVar.Key)
 	if err != nil {
 		log.Printf("Error %s when inserting row into apkKeys table", err)
 		return err
@@ -300,6 +327,46 @@ func generateUniqueFileName(ext string) string {
 	bs := sh.Sum(nil)
 	h := hex.EncodeToString(bs)
 	return h + ext
+}
+
+func apkDataHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("method:", r.Method)
+
+	//read
+	switch r.Method {
+	case "GET":
+		fmt.Fprint(w, "use POST for request")
+	case "POST":
+		var apkData_ ApkData
+		var unmarshalErr *json.UnmarshalTypeError
+
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&apkData_)
+		if err != nil {
+			if errors.As(err, &unmarshalErr) {
+				log.Println( "Bad Request. Wrong Type provided for field "+unmarshalErr.Field)
+			} else {
+				log.Println( "Bad Request "+err.Error())
+			}
+			return
+		}
+
+		result, _, _ := checkCredentionals(apkData_.UserEmail, apkData_.Password)
+		apkData_.Id = generateUniqueFileName("")
+		if result {
+			err = insertApkData(apkData_)
+		}
+
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if result && err == nil {
+			w.Write([]byte(apkData_.Id))
+		} else {
+			w.Write([]byte("0"))
+		}
+	default:
+		fmt.Fprintf(w, "Use GET or POST")
+	}
 }
 
 func userInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -553,7 +620,7 @@ func encryptHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(apkResponse)
 
-		insertApkKey(*apkResponse)
+		insertApkKeys(*apkResponse)
 	default:
 		fmt.Fprintf(w, "Use GET or POST")
 	}
@@ -729,12 +796,17 @@ func main() {
 		return
 	}
 
+	err = createTable(`CREATE TABLE IF NOT EXISTS apkData(apk_id varchar(500) UNIQUE, file_passcode BLOB, file_challenge BLOB, file_key BLOB)`)
+	if err != nil {
+		log.Printf("Create apkData table failed with error %s", err)
+		return
+	}
+
 	err = createTable(`CREATE TABLE IF NOT EXISTS redeemInvitations(invitation varchar(500) UNIQUE)`)
 	if err != nil {
 		log.Printf("Create redeemInvitation table failed with error %s", err)
 		return
 	}
-
 
 	var count int
 
@@ -762,6 +834,7 @@ func main() {
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/device", deviceHandler)
 	http.HandleFunc("/userInfo", userInfoHandler)
+	http.HandleFunc("/apkData", apkDataHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 

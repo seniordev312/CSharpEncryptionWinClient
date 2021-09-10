@@ -35,10 +35,10 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
         AesEncryption encryption;
         for(int index = 0; index < 2;index++){
             QString baseFileName =QString("file_%1").arg(index);
-            QString sourceFile = QString("%1/%2.txt").arg(m_folder).arg(baseFileName);
+            QString sourceFile = QString("%1/%2.txt").arg(m_folder, baseFileName);
             generateFile(sourceFile);
             //encode file
-            QString encodedFile = QString("%1/%2.encoded").arg(m_folder).arg(baseFileName);
+            QString encodedFile = QString("%1/%2.encoded").arg(m_folder, baseFileName);
             ok = (encryption.encrypt(sourceFile,encodedFile, aes256Key, iv) == 0);
             QFile::remove(sourceFile);
             outList.append(encodedFile);

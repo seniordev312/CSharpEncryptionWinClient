@@ -3,6 +3,8 @@
 #include <QRunnable>
 #include <QMutex>
 
+class QNetworkAccessManager;
+
 class ApkInstallWorker : public QObject, public QRunnable
 {
     Q_OBJECT
@@ -35,6 +37,8 @@ signals:
     void message(QString msg);
     void sigError (QString title, QString what, QString where, QString details);
 private:
+    QNetworkAccessManager* m_manager {nullptr};
+
     bool doPushApk();
     bool doRunApk();
     void doWaitPublicKey();
