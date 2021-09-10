@@ -55,5 +55,7 @@ build
 bin
 
 # server test
-server_test/
+server_test/.idea/
+server_test/encryption/
+server_test/*.apk
 
