@@ -6,6 +6,7 @@
 #include <QProcess>
 
 class QTimer;
+class QNetworkAccessManager;
 
 namespace Ui {
 class DeviceInfoWgt;
@@ -43,6 +44,8 @@ public:
 
     void init ();
 
+    void postToWebApp ();
+
 private:
     Ui::DeviceInfoWgt *ui;
 
@@ -51,6 +54,8 @@ private:
     QFutureWatcher <DeviceInfo> devInfoFutureWatcher;
 
     QTimer * timerUpdate {nullptr};
+
+    QNetworkAccessManager* m_manager {nullptr};
 
 private slots:
     void onDevInfoUpdated ();

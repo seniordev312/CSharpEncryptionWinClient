@@ -20,8 +20,6 @@
 #include "apkinstallworker.h"
 #include "utils.h"
 
-#define defEndpoint "http://localhost:8080"
-
 InstallingWgt::InstallingWgt(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::InstallingWgt)
@@ -106,8 +104,8 @@ void InstallingWgt::sendApkRequest()
             QString id;
 
             if(json.contains("Key")){
-                auto encodedKey = json.value("Key").toString();
-                key = m_rsaEncryption.decryptPri(encodedKey);
+                auto encodedKey = json.value("Key").toString().toLocal8Bit();
+                key = m_rsaEncryption.decryptPriBase64(encodedKey);
             }
 
             if(json.contains("Id")){

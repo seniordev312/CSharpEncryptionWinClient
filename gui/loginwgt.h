@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QShowEvent;
+class QNetworkAccessManager;
 
 namespace Ui {
 class LoginWgt;
@@ -28,6 +29,8 @@ protected:
 private:
     Ui::LoginWgt *ui;
 
+    QNetworkAccessManager* m_manager;
+
 private slots:
     void onQuestion ();
 
@@ -42,6 +45,7 @@ signals:
 
     void sigSuccess ();
 
+    void sigError (QString title, QString what, QString where, QString details);
 };
 
 #endif // LOGINWGT_H

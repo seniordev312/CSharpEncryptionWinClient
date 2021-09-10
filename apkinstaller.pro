@@ -49,6 +49,7 @@ HEADERS += \
     adbwrapper.h \
     aesencryption.h \
     apkinstallworker.h \
+    credentionals.h \
     gui/customerinfowgt.h \
     gui/deviceinfowgt.h \
     gui/errorhandlingdlg.h \
@@ -56,7 +57,6 @@ HEADERS += \
     gui/installingwgt.h \
     settingkeys.h \
     installfilesgenerator.h \
-    mainview.h \
     rsaencryption.h \
     gui/loginsignwgt.h \
     gui/loginwgt.h \
@@ -71,6 +71,7 @@ SOURCES += \
     adbwrapper.cpp \
     aesencryption.cpp \
     apkinstallworker.cpp \
+    credentionals.cpp \
     gui/customerinfowgt.cpp \
     gui/deviceinfowgt.cpp \
     gui/errorhandlingdlg.cpp \
@@ -78,7 +79,6 @@ SOURCES += \
     gui/installingwgt.cpp \
     installfilesgenerator.cpp \
     main.cpp \
-    mainview.cpp \
     rsaencryption.cpp \
     gui/loginsignwgt.cpp \
     gui/loginwgt.cpp \

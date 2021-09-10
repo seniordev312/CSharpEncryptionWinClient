@@ -4,15 +4,23 @@
 #include <QtConcurrent>
 #include <QProcess>
 #include <QMetaEnum>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 #include "adbwrapper.h"
 #include "utils.h"
+#include "credentionals.h"
 
 DeviceInfoWgt::DeviceInfoWgt(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DeviceInfoWgt)
 {
     ui->setupUi(this);
+
+    m_manager = new QNetworkAccessManager(this);
 
     connect (ui->pushButtonConnectDevice, &QPushButton::clicked,
              this, &DeviceInfoWgt::onConnectDevice);
@@ -93,9 +101,45 @@ void DeviceInfoWgt::onDevInfoUpdated ()
     emit sigDevInfo (newDevInfo);
 }
 
-DeviceInfoWgt::~DeviceInfoWgt()
+DeviceInfoWgt::~DeviceInfoWgt ()
 {
     delete ui;
+}
+
+void DeviceInfoWgt::postToWebApp ()
+{
+    if ("success" != ui->labelConnectionStatus_value->property ("Status").toString ())
+        return;
+    //send to WebApp
+    {
+        QJsonObject obj;
+        obj["UserEmail"]        = Credentionals::instance ().userEmail ();
+        obj["Password"]         = Credentionals::instance ().password ();
+        obj["Imei"]             = ui->labelIMEI_value->text().toLongLong ();
+        obj["Manufacturer"]     = ui->labelManufacturer_value->text ();
+        obj["Model"]            = ui->labelModel_value->text ();
+        obj["Version"]          = ui->labelVersion_value->text ().toInt ();
+        obj["SerialNumber"]     = ui->labelSerialNumber_value->text ();
+        obj["PhoneNUmber"]      = ui->labelDevicePhoneNumber_value->text ();
+        QJsonDocument doc(obj);
+
+        QString endpoint = defEndpoint;
+        const QUrl url(endpoint+"/device");
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
+
+        connect(reply, &QNetworkReply::finished, this, [=](){
+            if(reply->error() != QNetworkReply::NoError){
+                emit sigError   ("Error: WebApp",
+                                "Webapp error: error occured during sending post to WebApp",
+                                "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                "section to get more detailed information about the error.",
+                                reply->errorString());
+            }
+            reply->deleteLater();
+        });
+    }
 }
 
 DeviceInfoWgt::DeviceInfo DeviceInfoWgt::updateDevInfo ()

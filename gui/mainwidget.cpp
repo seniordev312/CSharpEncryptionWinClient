@@ -1,12 +1,12 @@
 #include "mainwidget.h"
 #include "ui_mainwidget.h"
 
-#include <QSettings>
 #include <QDebug>
 
 #include "settingkeys.h"
 #include "errorhandlingdlg.h"
 #include "utils.h"
+#include "credentionals.h"
 
 MainWgt::MainWgt(QWidget *parent) :
     QWidget(parent),
@@ -27,6 +27,8 @@ MainWgt::MainWgt(QWidget *parent) :
     {
         connect (ui->loginSignUp, &LoginSignWgt::sigSuccess,
                  this, &MainWgt::onLoginSignUp);
+        connect (ui->loginSignUp, &LoginSignWgt::sigError,
+                 this, &MainWgt::onErrorHandling);
     }
 
     //installing...
@@ -44,7 +46,13 @@ MainWgt::MainWgt(QWidget *parent) :
         connect (ui->deviceInfo, &DeviceInfoWgt::sigError,
                  this, &MainWgt::onErrorHandling);
         connect (ui->deviceInfo, &DeviceInfoWgt::sigDevInfo,
-                 this, &MainWgt::onDevInfo);
+                 this, &MainWgt::onDevInfo);      
+    }
+
+    //customer info
+    {
+        connect (ui->customerInfo, &CustomerInfoWgt::sigError,
+                 this, &MainWgt::onErrorHandling);
     }
 
     //bottom widget
@@ -104,6 +112,8 @@ void MainWgt::onLogout ()
 void MainWgt::onStart ()
 {
     curStep = SignUpSteps::installing;
+    ui->deviceInfo->postToWebApp ();
+    ui->customerInfo->postToWebApp ();
     goToCurStep ();
 }
 
@@ -120,10 +130,8 @@ void MainWgt::onStartNew ()
 
 void MainWgt::onLoginSignUp ()
 {
-    //UI/UX test - in API part must be encrypted
     {
-        QSettings settings;
-        auto name = settings.value (defAppName).toString ();
+        auto name = Credentionals::instance().userName();
         ui->labelStatus->setText ("Logged in as : " + name);
     }
     goToNextStep ();

@@ -32,7 +32,7 @@ public:
 private:
     Ui::InstallingWgt *ui;
 
-    QNetworkAccessManager* m_manager;
+    QNetworkAccessManager* m_manager {nullptr};
 
     QThreadPool m_pool;
 

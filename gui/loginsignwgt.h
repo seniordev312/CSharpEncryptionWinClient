@@ -31,6 +31,7 @@ private slots:
 signals:
     void sigSuccess ();
 
+    void sigError (QString title, QString what, QString where, QString details);
 };
 
 #endif // LOGINSIGNWGT_H

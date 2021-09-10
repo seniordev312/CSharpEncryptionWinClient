@@ -79,14 +79,62 @@ void RsaEncryption::generate()
     BIO_free_all(pub);
 }
 
-QByteArray RsaEncryption::decryptPri(QString &data)
+QByteArray RsaEncryption::decryptPriBase64(QByteArray &data)
 {
-    QByteArray before = data.toLocal8Bit();
+#if 0
+    QByteArray before = data;
+    //QByteArray encodedBase64 = QByteArray::fromBase64(before);
+
+    unsigned char* encryptedData = (unsigned char*)before.data();
+
+    QByteArray result;
+    unsigned char* decryptedBin = new unsigned char[before.length()];
+    int resultLen = RSA_private_decrypt(before.length()
+                                        , encryptedData
+                                        , decryptedBin
+                                        , m_impl->rsa
+                                        , RSA_PKCS1_OAEP_PADDING);
+
+    if(resultLen == -1){
+        qInfo()<<"ERROR: RSA_private_decrypt:"<<ERR_error_string(ERR_get_error(), NULL);
+    }
+
+    result.append((char*)decryptedBin, resultLen);
+
+    return result;
+#else
+    QByteArray before = data;
     QByteArray encodedBase64 = QByteArray::fromBase64(before);
 
     unsigned char* encryptedData = (unsigned char*)encodedBase64.data();
     int rsaLen = RSA_size(m_impl->rsa);
     int partNum = encodedBase64.size()/rsaLen;
+
+    QByteArray result;
+    for(int i = 0; i<partNum;i++){
+        unsigned char* decryptedBin = new unsigned char[rsaLen];
+        int resultLen = RSA_private_decrypt(rsaLen
+                                            , encryptedData + i*rsaLen
+                                            , decryptedBin
+                                            , m_impl->rsa
+                                            , RSA_PKCS1_OAEP_PADDING);
+
+        if(resultLen == -1){
+            qInfo()<<"ERROR: RSA_private_decrypt:"<<ERR_error_string(ERR_get_error(), NULL);
+        }
+
+        result.append((char*)decryptedBin, resultLen);
+    }
+
+    return result;
+#endif
+}
+
+QByteArray RsaEncryption::decryptPri(QByteArray &data)
+{
+    unsigned char* encryptedData = (unsigned char*)data.data();
+    int rsaLen = RSA_size(m_impl->rsa);
+    int partNum = data.size()/rsaLen;
 
     QByteArray result;
     for(int i = 0; i<partNum;i++){
@@ -134,6 +182,62 @@ RSA* createRSA(unsigned char* key,int len, bool pub)
     BIO_free(bio);
 
     return rsa;
+}
+
+QByteArray RsaEncryption::encryptPub(const QByteArray& data)
+{
+    if(data.isEmpty()){
+        return QByteArray();
+    }
+    int rsaLen = RSA_size(m_impl->rsa);
+
+    QByteArray result;
+    unsigned char* encBuffer = new unsigned char[rsaLen];
+    int crtLen = RSA_public_encrypt(data.length()
+                                    , (unsigned char*)data.data()
+                                    , encBuffer
+                                    , m_impl->rsa
+                                    , RSA_PKCS1_OAEP_PADDING);
+
+    qInfo()<<"crtLen:"<<crtLen;
+
+    if(crtLen <= 0){
+        qInfo()<<"ERROR: RSA_public_encrypt"<<ERR_error_string(ERR_get_error(), NULL);
+        return QByteArray();
+    }
+
+    result.append((char*)encBuffer,crtLen);
+
+    return result;
+
+    int partNum = data.length()/rsaLen;
+//    if(partNum == 0){
+//        partNum = 1;
+//    }
+
+    int count = 0;
+
+    for(int i = 0; i < partNum; i++){
+        qInfo()<<"enc part";
+        unsigned char* encryptedBin = new unsigned char[rsaLen];
+        int resultLen = RSA_public_encrypt(rsaLen
+                                           , (unsigned char*)data.data() + i*rsaLen
+                                           , encryptedBin
+                                           , m_impl->rsa
+                                           , RSA_PKCS1_OAEP_PADDING);
+        if(resultLen == -1){
+            qInfo()<<"ERROR: RSA_public_encrypt"<<ERR_error_string(ERR_get_error(), NULL);
+            break;
+        }
+
+        qInfo()<<"APPEND len:"<<resultLen;
+        result.append((char*)encryptedBin, resultLen);
+        count+=resultLen;
+    }
+
+    qInfo()<<"Encrypted count:"<<count;
+    RSA_free(m_impl->rsa);
+    return result;
 }
 
 QByteArray RsaEncryption::encryptData(const QByteArray &key, const QByteArray &data)

@@ -1,7 +1,6 @@
 #include <QApplication>
 #include <QFile>
 
-#include "mainview.h"
 #include "gui/mainwidget.h"
 #include "gui/deviceinfowgt.h"
 

@@ -27,6 +27,12 @@ LoginSignWgt::LoginSignWgt (QWidget *parent) :
         connect (ui->signUp, &SignWgt::sigLogin,
                  this, &LoginSignWgt::onLogin);
 
+        connect (ui->signUp, &SignWgt::sigError,
+                 this, &LoginSignWgt::sigError);
+
+        connect (ui->login, &LoginWgt::sigError,
+                 this, &LoginSignWgt::sigError);
+
         connect (ui->login, &LoginWgt::sigSuccess,
                  this, &LoginSignWgt::sigSuccess);
 
@@ -64,6 +70,7 @@ void LoginSignWgt::clear ()
     ui->password->clear ();
     ui->signUp->clear ();
     ui->login->clear ();
+    ui->stackedWidget->setCurrentWidget(ui->login);
 }
 
 void LoginSignWgt::onForgotPasswordActivated ()

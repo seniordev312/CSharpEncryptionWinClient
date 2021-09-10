@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+class QNetworkAccessManager;
+
 namespace Ui {
 class SignWgt;
 }
@@ -24,6 +26,8 @@ protected:
 private:
     Ui::SignWgt *ui;
 
+    QNetworkAccessManager* m_manager {nullptr};
+
     void onlyInviationView (bool activated, bool init = false);
 
 private slots:
@@ -41,6 +45,8 @@ signals:
     void sigLogin ();
 
     void sigSuccess ();
+
+    void sigError (QString title, QString what, QString where, QString details);
 };
 
 #endif // SIGNWGT_H

@@ -1,14 +1,16 @@
 #include "signwgt.h"
 #include "ui_signwgt.h"
 
-#include <QSettings>
 #include <QKeyEvent>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QMessageAuthenticationCode>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "utils.h"
 #include "settingkeys.h"
-
-//UI/UX test - in API part must be removed
-#define defInvitationCode "1234"
+#include "credentionals.h"
 
 SignWgt::SignWgt(QWidget *parent) :
     QWidget(parent),
@@ -45,6 +47,8 @@ SignWgt::SignWgt(QWidget *parent) :
     ui->lineEditName->installEventFilter (this);
     ui->lineEditEmail->installEventFilter (this);
     ui->lineEditRetypePassword->installEventFilter (this);
+
+    m_manager = new QNetworkAccessManager(this);
 }
 
 SignWgt::~SignWgt ()
@@ -81,20 +85,52 @@ void SignWgt::clear ()
         edit->clear ();
     ui->labelStatusInvitationCode->clear ();
     ui->checkBoxTermsPrivacy->setChecked (false);
+    onlyInviationView (false, true);
 }
 
 void SignWgt::onSignUp ()
-{
-    QSettings settings;
-    //UI/UX test - in API part must be encrypted
+{    
+    auto email = ui->lineEditEmail->text ();
+    auto password = ui->lineEditPassword->text ();
+    auto hashPassw = QMessageAuthenticationCode::hash(password.toUtf8(),
+                     (QByteArray)defHashKey,QCryptographicHash::Sha256).toBase64();
+    auto name = ui->lineEditName->text ();
+
+    //send to WebApp
     {
-        auto email = ui->lineEditEmail->text ();
-        settings.setValue (defAppEmail, email);
-        auto password = ui->lineEditPassword->text ();
-        settings.setValue (defAppPassword, password);
-        auto name = ui->lineEditName->text ();
-        settings.setValue (defAppName, name);
-        emit sigSuccess ();
+        QJsonObject obj;
+        obj["UserName"]     = name;
+        obj["UserEmail"]    = email;
+        obj["Password"]     = QString::fromStdString (hashPassw.toStdString ());
+        QJsonDocument doc(obj);
+
+        QString endpoint = defEndpoint;
+        const QUrl url(endpoint+"/signUp");
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
+
+        connect(reply, &QNetworkReply::finished, this, [=](){
+            if(reply->error() != QNetworkReply::NoError){
+                emit sigError   ("Error: WebApp",
+                                "Webapp error: error occured during sending post to WebApp",
+                                "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                "section to get more detailed information about the error.",
+                                reply->errorString());
+            }
+            else {
+                QString resp = QString(reply->readAll());
+                if ("1" == resp) {
+                    //store locally
+                    {
+                        Credentionals::instance ().setData (email, name, hashPassw);
+                    }
+
+                    emit sigSuccess ();
+                }
+            }
+            reply->deleteLater();
+        });
     }
 }
 
@@ -112,11 +148,27 @@ void SignWgt::onActivationCodeChanged ()
 
 void SignWgt::onSend ()
 {
-    //UI/UX test - in API part must be removed
-    {
-        auto code = ui->lineEditInvitationCode->text ();
-        onlyInviationView (defInvitationCode == code);
-    }
+    auto code = ui->lineEditInvitationCode->text ().toUtf8 ();
+
+    QString endpoint = defEndpoint;
+    const QUrl url(endpoint+"/invitation");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply* reply = m_manager->post(request, code);
+
+    connect(reply, &QNetworkReply::finished, this, [=](){
+        if(reply->error() == QNetworkReply::NoError){
+            QString resp = QString(reply->readAll());
+            onlyInviationView ("1" == resp);
+        }else{
+            emit sigError   ("Error: WebApp",
+                            "Webapp error: error occured during checking invitation in WebApp",
+                            "An error occured during sending requests to WebApp. See \"Details\"\n"
+                            "section to get more detailed information about the error.",
+                            reply->errorString());
+        }
+        reply->deleteLater();
+    });
 }
 
 void SignWgt::checkConditionsSignUp ()

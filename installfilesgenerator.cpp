@@ -1,7 +1,9 @@
 #include "installfilesgenerator.h"
+
 #include <QFile>
 #include <QRandomGenerator>
 #include <QDebug>
+
 #include "aesencryption.h"
 #include "rsaencryption.h"
 

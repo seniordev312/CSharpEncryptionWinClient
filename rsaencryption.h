@@ -6,14 +6,20 @@ class RsaEncryption
 {
 public:
     RsaEncryption();
+
     ~RsaEncryption();
 
     void generate();
-    QByteArray decryptPri(QString &data);
+
+    QByteArray decryptPriBase64(QByteArray &data);
+
+    QByteArray decryptPri(QByteArray &data);
 
     QString publicKey();
 
     static QByteArray encryptData(const QByteArray& key, const QByteArray& data);
+
+    QByteArray encryptPub(const QByteArray& data);
 
 private:
     struct Private;
