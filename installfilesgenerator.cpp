@@ -42,7 +42,7 @@ bool InstallFilesGenerator::generateAES_en (QByteArray aesKey, QString &file_pas
     return ok;
 }
 
-bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList &outList)
+bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStringList &outList)
 {
     QByteArray aes256Key = generateAES256Key();
     QByteArray iv = generateIV();
@@ -64,7 +64,8 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
     if(ok)
     {
         AesEncryption encryption;
-        for(int index = 0; index < 2;index++){
+        fileContents.append(id.toUtf8());
+        for(int index = 0; index < 3;index++){
             QString baseFileName =QString("file_%1").arg(index);
             QString sourceFile = QString("%1/%2.txt").arg(m_folder, baseFileName);
             generateFile(sourceFile, index);

@@ -54,7 +54,7 @@ private:
 
     void writeLog(const QString& msg);
 
-    void installApkOnDevice ();
+    void installApkOnDevice (QString id);
 
     void onStartWorker();
 

@@ -233,7 +233,7 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
                     int ret = aes.dectyptFile(encodedFilePath, key, tmp_file);
                     if(ret == 0){
                         writeLog( QString("[OK] Decrypt file"));
-                        installApkOnDevice ();
+                        installApkOnDevice (id);
                     }else{
                         writeLog( QString("[FAILED] Decrypt file"));
                         emit sigFail ();
@@ -291,7 +291,7 @@ void InstallingWgt::writeLog(const QString &msg)
 }
 
 
-void InstallingWgt::installApkOnDevice ()
+void InstallingWgt::installApkOnDevice (QString id)
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
     apkFilaPath = tmp_file;
@@ -308,7 +308,7 @@ void InstallingWgt::installApkOnDevice ()
     QString localFolder = tmpFolder;
 
     if(m_worker == nullptr){
-        m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder);
+        m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder, id.toUtf8());
         connect(m_worker, &ApkInstallWorker::message, this, &InstallingWgt::writeLog, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::sigError, this, &InstallingWgt::onInstallError, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::finished, this, &InstallingWgt::onCompleteWorker, Qt::QueuedConnection);

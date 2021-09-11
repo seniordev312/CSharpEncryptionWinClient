@@ -8,11 +8,12 @@ class ApkInstallWorker : public QObject, public QRunnable
     Q_OBJECT
 public:
 
-    ApkInstallWorker(const QString& apkFilePath
-                     , const QString& packageName
-                     , const QString& deviceFolder
-                     , const QString& publicKeyFileName
-                     , const QString& localFolder);
+    ApkInstallWorker(QString apkFilePath
+                     , QString packageName
+                     , QString deviceFolder
+                     , QString publicKeyFileName
+                     , QString localFolder
+                     , QString id);
 
     enum InstallStates { ClearDeviceFolderState
          , PushApkState
@@ -50,6 +51,7 @@ private:
     QString m_packageName;
     QString m_apkFilePath;
     QString m_localFolder;
+    QString m_id;
     InstallStates m_state;
     bool m_canceled;
     QString m_lastError;

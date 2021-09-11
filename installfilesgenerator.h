@@ -11,7 +11,7 @@ public:
 
     static bool generateAES_en(QByteArray aesKey, QString & file_passcode, QString & file_challenge); //to web posts
 
-    bool generate(const QByteArray& rsaPulicKey, QStringList& outList);
+    bool generate(QByteArray rsaPulicKey, QString id, QStringList& outList);
 
 private:
     void generateFile(const QString &fullPath, int index);

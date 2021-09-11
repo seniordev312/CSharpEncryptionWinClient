@@ -8,19 +8,22 @@
 #include "adbwrapper.h"
 #include "installfilesgenerator.h"
 
-ApkInstallWorker::ApkInstallWorker(const QString &apkFilePath
-                                   , const QString &packageName
-                                   , const QString &deviceFolder
-                                   , const QString &publicKeyFileName
-                                   , const QString &localFolder)
+ApkInstallWorker::ApkInstallWorker(QString apkFilePath
+                                     , QString packageName
+                                     , QString deviceFolder
+                                     , QString publicKeyFileName
+                                     , QString localFolder
+                                     , QString id)
     : QObject(), QRunnable()
     , m_deviceFolder(deviceFolder)
     , m_publicKeyFileName(publicKeyFileName)
     , m_packageName(packageName)
     , m_apkFilePath(apkFilePath)
     , m_localFolder(localFolder)
+    , m_id (id)
     , m_canceled(false)
 {
+
 }
 
 void ApkInstallWorker::run()
@@ -280,7 +283,7 @@ void ApkInstallWorker::doGenerateInstallFiles()
 
     m_installFileList.clear();
     InstallFilesGenerator generator(m_localFolder);
-    bool ok = generator.generate(m_apkRsaPublicKeyData, m_installFileList);
+    bool ok = generator.generate(m_apkRsaPublicKeyData, m_id, m_installFileList);
     if(ok) {
         emit message("[OK] Generate install files");
         m_state = InstallStates::PushInstallFilesState;
