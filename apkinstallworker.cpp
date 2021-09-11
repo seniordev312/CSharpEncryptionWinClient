@@ -4,16 +4,9 @@
 #include <QMutexLocker>
 #include <QFile>
 #include <QRandomGenerator>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QEventLoop>
 
 #include "adbwrapper.h"
 #include "installfilesgenerator.h"
-#include "gui/utils.h"
-#include "credentionals.h"
 
 ApkInstallWorker::ApkInstallWorker(const QString &apkFilePath
                                    , const QString &packageName
@@ -33,7 +26,6 @@ ApkInstallWorker::ApkInstallWorker(const QString &apkFilePath
 void ApkInstallWorker::run()
 {
     emit started();
-    m_manager = new QNetworkAccessManager (this);
     QString res;
     bool isError {false};
     QProcess::ProcessError error {QProcess::UnknownError};
@@ -290,51 +282,8 @@ void ApkInstallWorker::doGenerateInstallFiles()
     InstallFilesGenerator generator(m_localFolder);
     bool ok = generator.generate(m_apkRsaPublicKeyData, m_installFileList);
     if(ok) {
-        QJsonObject obj;
-        obj["UserEmail"]    = Credentionals::instance ().userEmail ();
-        obj["Password"]     = Credentionals::instance ().password ();
-        for (int i=0; i<m_installFileList.size(); i++) {
-            QFile file (m_installFileList[i]);
-            if (file.open (QIODevice::ReadOnly)) {
-                if (1 == i)
-                    obj["File_key"] = QString (file.readAll ());
-                else if (2 == i)
-                    obj["File_passcode"] = QString (file.readAll ());
-                else if (3 == i)
-                    obj["File_challenge"] = QString (file.readAll ());
-            }
-            else {
-                if (1 == i)
-                    obj["File_key"] = QString ();
-                else if (2 == i)
-                    obj["File_passcode"] = QString ();
-                else if (3 == i)
-                    obj["File_challenge"] = QString ();
-            }
-        }
-        QJsonDocument doc(obj);
-
-        QString endpoint = defEndpoint;
-        const QUrl url(endpoint+"/apkData");
-        QNetworkRequest request(url);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
-        QEventLoop loop;
-        connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-        loop.exec();
-        if(reply->error() != QNetworkReply::NoError){
-//            emit sigError   ("Error: WebApp",
-//                            "Webapp error: error occured during sending post to WebApp",
-//                            "An error occured during sending requests to WebApp. See \"Details\"\n"
-//                            "section to get more detailed information about the error.",
-//                            reply->errorString());
-        }
-        else {
-            auto id = QString (reply->readAll ());
-            emit message("[OK] Generate install files");
-            m_state = InstallStates::PushInstallFilesState;
-        }
-        reply->deleteLater();
+        emit message("[OK] Generate install files");
+        m_state = InstallStates::PushInstallFilesState;
     }
     else{
         emit message("[FAILED] Generate install files");

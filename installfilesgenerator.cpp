@@ -1,14 +1,45 @@
 #include "installfilesgenerator.h"
 
 #include <QFile>
+#include <QBuffer>
 #include <QRandomGenerator>
 #include <QDebug>
 
 #include "aesencryption.h"
 #include "rsaencryption.h"
 
+QByteArrayList InstallFilesGenerator::fileContents;
+
 InstallFilesGenerator::InstallFilesGenerator(const QString &folder):m_folder(folder)
 {
+
+}
+
+void InstallFilesGenerator::createFilesContents ()
+{
+    fileContents = {"Mock data content for file 1", "Mock data content for file 2"};
+}
+
+//to web posts
+bool InstallFilesGenerator::generateAES_en (QByteArray aesKey, QString &file_passcode, QString &file_challenge)
+{
+    createFilesContents ();
+    AesEncryption encryption;
+    bool ok = true;
+    for (int i = 0; i < fileContents.size(); i++) {
+        QBuffer buffSource;
+        buffSource.setBuffer (&fileContents[i]);
+        QBuffer buffEncrypted;
+        QByteArray iv = generateIV();
+        ok = encryption.encryptIODevice (&buffSource, &buffEncrypted, aesKey, iv);
+        if (!ok)
+            break;
+        if (1==i)
+            file_passcode = buffEncrypted.buffer();
+        else if (2==i)
+            file_challenge = buffEncrypted.buffer();
+    }
+    return ok;
 }
 
 bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList &outList)
@@ -36,7 +67,7 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
         for(int index = 0; index < 2;index++){
             QString baseFileName =QString("file_%1").arg(index);
             QString sourceFile = QString("%1/%2.txt").arg(m_folder, baseFileName);
-            generateFile(sourceFile);
+            generateFile(sourceFile, index);
             //encode file
             QString encodedFile = QString("%1/%2.encoded").arg(m_folder, baseFileName);
             ok = (encryption.encrypt(sourceFile,encodedFile, aes256Key, iv) == 0);
@@ -49,11 +80,11 @@ bool InstallFilesGenerator::generate(const QByteArray &rsaPulicKey, QStringList 
     return ok;
 }
 
-void InstallFilesGenerator::generateFile(const QString &fullPath)
+void InstallFilesGenerator::generateFile(const QString &fullPath, int index)
 {
     QFile file(fullPath);
     if(file.open(QIODevice::ReadWrite)){
-        QString data = QString("Mock data content for file:'%1'").arg(fullPath);
+        QString data = fileContents[index];
         file.write(data.toLatin1());
         file.close();
     }

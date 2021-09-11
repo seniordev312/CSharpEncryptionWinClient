@@ -47,7 +47,7 @@ type ApkData struct {
 	UserEmail  		string
 	Password  		string
 	Id  			string
-	File_key		string
+	AesKey 			string
 	File_passcode 	string
 	File_challenge 	string
 }
@@ -183,11 +183,11 @@ func checkCredentionals(email string, password string) (bool, string, error) {
 }
 
 func updateCredentionals(cred UserInfo) error {
-	query := "UPDATE userData set first_name = ?, last_name = ?, home_phone = ?, business_phone = ?, " +
+	query := "UPDATE userData SET first_name = ?, last_name = ?, home_phone = ?, business_phone = ?, " +
 			"sticker_number = ?, filter_level = ?, is_optional_restrictions = ?, is_camera = ?, " +
 			"is_gallery = ?, is_music = ?, is_sd_card = ?, is_file_manager = ?, is_bt_file_transfer = ?, " +
 			"is_outgoing_calls_wl = ?, is_incoming_calls_wl = ?, is_parental_block = ?, " +
-			"parental_block_code = ?, parental_phone_number = ? where user_email = ?"
+			"parental_block_code = ?, parental_phone_number = ? WHERE user_email = ?"
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelfunc()
 	stmt, err := db.PrepareContext(ctx, query)
@@ -267,8 +267,8 @@ func insertRedeemInivation(inivationIn string) error {
 	return nil
 }
 
-func insertApkData(apkDataVar ApkData) error {
-	query := "INSERT INTO apkData(apk_id, file_passcode, file_challenge, file_key) VALUES (?, ?, ?, ?)"
+func insertApkData(id string, aesKey string) error {
+	query := "INSERT INTO apkData(apk_id, aes_key) VALUES (?, ?)"
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelfunc()
 	stmt, err := db.PrepareContext(ctx, query)
@@ -277,16 +277,16 @@ func insertApkData(apkDataVar ApkData) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err= stmt.ExecContext(ctx, apkDataVar.Id, apkDataVar.File_passcode, apkDataVar.File_challenge, apkDataVar.File_key)
+	_, err= stmt.ExecContext(ctx, id, aesKey)
 	if err != nil {
-		log.Printf("Error %s when inserting row into apkKeys table", err)
+		log.Printf("Error %s when inserting row into apkData table", err)
 		return err
 	}
 	return nil
 }
 
-func insertApkKeys(apkDataVar ApkResponse) error {
-	query := "INSERT INTO apkKeys(apk_id, apk_key) VALUES (?, ?)"
+func updateApkData(apk ApkData) error {
+	query := "UPDATE apkData SET file_passcode = ?, file_challenge = ? WHERE apk_id = ?"
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelfunc()
 	stmt, err := db.PrepareContext(ctx, query)
@@ -295,9 +295,9 @@ func insertApkKeys(apkDataVar ApkResponse) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err= stmt.ExecContext(ctx, apkDataVar.Id, apkDataVar.Key)
+	_, err= stmt.ExecContext(ctx, apk.File_passcode, apk.File_challenge, apk.Id)
 	if err != nil {
-		log.Printf("Error %s when inserting row into apkKeys table", err)
+		log.Printf("Error %s when inserting row into apkData table", err)
 		return err
 	}
 	return nil
@@ -352,15 +352,14 @@ func apkDataHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		result, _, _ := checkCredentionals(apkData_.UserEmail, apkData_.Password)
-		apkData_.Id = generateUniqueFileName("")
 		if result {
-			err = insertApkData(apkData_)
+			err = updateApkData(apkData_)
 		}
 
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if result && err == nil {
-			w.Write([]byte(apkData_.Id))
+			w.Write([]byte("1"))
 		} else {
 			w.Write([]byte("0"))
 		}
@@ -620,7 +619,7 @@ func encryptHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(apkResponse)
 
-		insertApkKeys(*apkResponse)
+		insertApkData(encodedFilePath, string(aesKey))
 	default:
 		fmt.Fprintf(w, "Use GET or POST")
 	}
@@ -790,13 +789,7 @@ func main() {
 		return
 	}
 
-	err = createTable(`CREATE TABLE IF NOT EXISTS apkKeys(apk_id varchar(500) UNIQUE, apk_key text)`)
-	if err != nil {
-		log.Printf("Create apkKeys table failed with error %s", err)
-		return
-	}
-
-	err = createTable(`CREATE TABLE IF NOT EXISTS apkData(apk_id varchar(500) UNIQUE, file_passcode BLOB, file_challenge BLOB, file_key BLOB)`)
+	err = createTable(`CREATE TABLE IF NOT EXISTS apkData(apk_id varchar(500) UNIQUE, aes_key text, file_passcode BLOB, file_challenge BLOB)`)
 	if err != nil {
 		log.Printf("Create apkData table failed with error %s", err)
 		return

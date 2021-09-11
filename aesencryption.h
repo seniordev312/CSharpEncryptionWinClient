@@ -1,7 +1,9 @@
 #pragma once
+
 #include <QString>
-#include <openssl/evp.h>
 #include <QFile>
+
+#include <openssl/evp.h>
 
 typedef struct _cipher_params_t{
     unsigned char *key;
@@ -18,8 +20,13 @@ public:
     int dectyptFile(const QString& encodedFilePath, const QByteArray& key, const QString& decodedFilePath);
 
     int decrypt(const QString& encodedFilePath, const QString& decodedFilePath, const QByteArray& key, const QByteArray& iv);
+
     int encrypt(const QString& sourceFilePath,  const QString& encodedFilePath, const QByteArray& key, const QByteArray& iv);
 
-    void file_encrypt_decrypt(cipher_params_t * params, QFile *ifp, QFile *ofp);
-    void cleanup(cipher_params_t * params, QFile *ifp, QFile *ofp);
+    bool encryptIODevice(QIODevice *source,  QIODevice *encoded, QByteArray key, QByteArray iv);
+
+    void file_encrypt_decrypt(cipher_params_t * params, QIODevice *ifp, QIODevice *ofp);
+
+    void cleanup(cipher_params_t * params, QIODevice *ifp, QIODevice *ofp);
+
 };

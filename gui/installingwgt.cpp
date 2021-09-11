@@ -19,6 +19,8 @@
 #include "aesencryption.h"
 #include "apkinstallworker.h"
 #include "utils.h"
+#include "credentionals.h"
+#include "installfilesgenerator.h"
 
 InstallingWgt::InstallingWgt(QWidget *parent) :
     QWidget(parent),
@@ -114,7 +116,7 @@ void InstallingWgt::sendApkRequest()
 
             bool isValid = !key.isEmpty() && !id.isEmpty();
             if(isValid){
-                runDownloadFile(id,key);
+                postToWebInstallFiles(id,key);
             }else{
                writeLog(QString("[FAILED] Parse response.'%1'").arg(resp));
                onInstallError ("Error: WebApp",
@@ -134,6 +136,60 @@ void InstallingWgt::sendApkRequest()
                             "section to get more detailed information about the error.",
                             m_output);
             emit sigFail ();
+        }
+        reply->deleteLater();
+    });
+
+}
+
+void InstallingWgt::postToWebInstallFiles (const QString& id, const QByteArray& key)
+{
+    QJsonObject obj;
+    obj["UserEmail"]    = Credentionals::instance ().userEmail ();
+    obj["Password"]     = Credentionals::instance ().password ();
+    obj["Id"]     = id;
+
+    QString content_passcode;
+    QString content_challenge;
+    bool ok = InstallFilesGenerator::generateAES_en (key, content_passcode, content_challenge);
+    if (!ok){
+        emit sigError   ("Error: Encryption",
+                        "Webapp error: error occured during encrypting install files",
+                        "An error occured during encrypting install files. See \"Details\"\n"
+                        "section to get more detailed information about the error.",
+                        "");
+    }
+    obj["File_passcode"] = content_passcode;
+    obj["File_challenge"] = content_challenge;
+
+    QJsonDocument doc(obj);
+
+    QString endpoint = defEndpoint;
+    const QUrl url(endpoint+"/apkData");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply* reply = m_manager->post (request, doc.toJson ());
+    connect(reply, &QNetworkReply::finished, this, [=](){
+        if(reply->error() != QNetworkReply::NoError){
+            emit sigError   ("Error: WebApp",
+                            "Webapp error: error occured during sending post to WebApp",
+                            "An error occured during sending requests to WebApp. See \"Details\"\n"
+                            "section to get more detailed information about the error.",
+                            reply->errorString());
+        }
+        else {
+            auto resp = QString (reply->readAll ());
+            if ("1" == resp) {
+                runDownloadFile(id,key);
+            }
+            else {
+                emit sigError   ("Error: WebApp",
+                                "Webapp error: can not create id of apk",
+                                "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                "section to get more detailed information about the error.",
+                                reply->errorString());
+            }
+
         }
         reply->deleteLater();
     });

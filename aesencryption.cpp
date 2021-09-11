@@ -144,9 +144,29 @@ int AesEncryption::encrypt(const QString &sourceFilePath, const QString &encoded
     return 0;
 }
 
+bool AesEncryption::encryptIODevice (QIODevice *source,  QIODevice *encoded, QByteArray key, QByteArray iv)
+{
+    if (!source->open(QIODevice::ReadOnly)) {
+        qCritical() << "Open source failed";
+        return false;
+    }
+
+    if(!encoded->open(QIODevice::WriteOnly)){
+        qCritical() << "Open encoded failed";
+        return false;
+    }
+    cipher_params_t params;
+    params.key = (unsigned char*)key.data();
+    params.iv = (unsigned char*)iv.data();
+    params.encrypt = 1;
+    params.cipher_type = EVP_aes_256_cbc();
+    file_encrypt_decrypt( &params, source, encoded);
+
+    return true;
+}
 
 //https://medium.com/@amit.kulkarni/encrypting-decrypting-a-file-using-openssl-evp-b26e0e4d28d4
-void AesEncryption::file_encrypt_decrypt(cipher_params_t *params, QFile *ifp, QFile *ofp)
+void AesEncryption::file_encrypt_decrypt(cipher_params_t *params, QIODevice *ifp, QIODevice *ofp)
 {
     int cipher_block_size = EVP_CIPHER_block_size(params->cipher_type);
     cipher_block_size = AES_BLOCK_SIZE;
@@ -230,7 +250,7 @@ void AesEncryption::file_encrypt_decrypt(cipher_params_t *params, QFile *ifp, QF
     EVP_CIPHER_CTX_cleanup(ctx);
 }
 
-void AesEncryption::cleanup(cipher_params_t *params, QFile *ifp, QFile *ofp)
+void AesEncryption::cleanup(cipher_params_t *params, QIODevice *ifp, QIODevice *ofp)
 {
     Q_UNUSED(params);
     Q_UNUSED(ifp);

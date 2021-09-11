@@ -46,7 +46,9 @@ private:
 
     void sendApkRequest();
 
-    void runDownloadFile(const QString& id, const QByteArray& key);
+    void runDownloadFile (const QString& id, const QByteArray& key);
+
+    void postToWebInstallFiles (const QString& id, const QByteArray& key);
 
     bool saveToDisk(const QString &filename, QIODevice *data);
 
