@@ -92,8 +92,8 @@ void SignWgt::onSignUp ()
 {    
     auto email = ui->lineEditEmail->text ();
     auto password = ui->lineEditPassword->text ();
-    auto hashPassw = QMessageAuthenticationCode::hash(password.toUtf8(),
-                     (QByteArray)defHashKey,QCryptographicHash::Sha256).toBase64();
+    auto hashPassw = QCryptographicHash::hash(password.toUtf8(),
+                     QCryptographicHash::Sha256).toHex();
     auto name = ui->lineEditName->text ();
 
     //send to WebApp

@@ -79,8 +79,8 @@ void LoginWgt::onLogin ()
 {
     auto email = ui->lineEditEmail->text ();
     auto password = ui->lineEditPassword->text ();
-    auto hashPassw = QString::fromStdString (QMessageAuthenticationCode::hash(password.toUtf8(),
-                              (QByteArray)defHashKey,QCryptographicHash::Sha256).toBase64().toStdString ());
+    auto hashPassw = QString::fromStdString (QCryptographicHash::hash(password.toUtf8(),
+                              QCryptographicHash::Sha256).toHex().toStdString ());
 
     //send to WebApp
     {

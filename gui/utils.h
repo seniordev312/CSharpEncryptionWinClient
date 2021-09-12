@@ -7,7 +7,6 @@
 class QWidget;
 
 #define defEndpoint "http://localhost:8080"
-#define defHashKey "cmpsv"
 
 void changeProperty(QWidget * obj, const char *property, QVariant value);
 
