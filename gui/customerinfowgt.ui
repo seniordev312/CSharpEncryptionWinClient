@@ -198,7 +198,7 @@
              <item>
               <widget class="QLineEdit" name="lineEditParentalPhoneNumber">
                <property name="placeholderText">
-                <string>Parental Phone Number*</string>
+                <string>Parental Phone Number</string>
                </property>
               </widget>
              </item>
@@ -418,11 +418,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <item>
-             <property name="text">
-              <string>Email</string>
-             </property>
-            </item>
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
             <item>
              <property name="text">
               <string>Talk &amp; MMS</string>
@@ -441,6 +439,11 @@
             <item>
              <property name="text">
               <string>Talk Only - Kids Safe</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Email</string>
              </property>
             </item>
            </widget>

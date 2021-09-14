@@ -33,8 +33,13 @@ private slots:
 
     void onOptionalRestrictionsChanged ();
 
+    void onComplete ();
+
 signals:
     void sigError (QString title, QString what, QString where, QString details);
+
+    void sigComplete (bool isComplete);
+
 };
 
 #endif // CUSTOMERINFOWGT_H

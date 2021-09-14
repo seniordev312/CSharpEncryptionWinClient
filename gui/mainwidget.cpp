@@ -53,6 +53,8 @@ MainWgt::MainWgt(QWidget *parent) :
     {
         connect (ui->customerInfo, &CustomerInfoWgt::sigError,
                  this, &MainWgt::onErrorHandling);
+        connect (ui->customerInfo, &CustomerInfoWgt::sigComplete,
+                 this, &MainWgt::onCustomerComplete);
     }
 
     //bottom widget
@@ -66,17 +68,27 @@ MainWgt::MainWgt(QWidget *parent) :
         connect (ui->pushButtonStartNew, &QPushButton::clicked,
                  this, &MainWgt::onStartNew);
     }
-
+    changeDeviceDetected (false);
     goToNextStep ();
+}
+
+void MainWgt::onCustomerComplete (bool isComplete)
+{
+    ui->pushButtonStart->setEnabled (isComplete);
+}
+
+void MainWgt::changeDeviceDetected (bool isDetected)
+{
+    changeProperty (ui->labelDeviceStatusValue, "Status", isDetected ? "success" : "fail");
+    if (isDetected)
+        ui->labelDeviceStatusValue->setText ("CONNECTED");
+    else
+        ui->labelDeviceStatusValue->setText ("DEVICE NOT DETECTED");
 }
 
 void MainWgt::onDevInfo (const DeviceInfoWgt::DeviceInfo & info)
 {
-    changeProperty (ui->labelDeviceStatusValue, "Status", info.isConnected ? "success" : "fail");
-    if (info.isConnected)
-        ui->labelDeviceStatusValue->setText ("CONNECTED");
-    else
-        ui->labelDeviceStatusValue->setText ("DEVICE NOT DETECTED");
+    changeDeviceDetected (info.isConnected);
 }
 
 void MainWgt::onErrorHandling (QString title, QString what, QString where, QString details)
@@ -99,12 +111,7 @@ void MainWgt::onFailInstall ()
 
 void MainWgt::onLogout ()
 {
-    //clear old info
-    {
-        ui->deviceInfo->init ();
-        ui->customerInfo->init ();
-    }
-
+    changeDeviceDetected (false);
     curStep = SignUpSteps::login_signup;
     goToCurStep ();
 }
@@ -119,11 +126,7 @@ void MainWgt::onStart ()
 
 void MainWgt::onStartNew ()
 {
-    //clear old info
-    {
-        ui->deviceInfo->init ();
-        ui->customerInfo->init ();
-    }
+    changeDeviceDetected (false);
     curStep = SignUpSteps::deviceInfo;
     goToCurStep ();
 }
@@ -177,11 +180,15 @@ void MainWgt::goToCurStep ()
     }
     else if(curStep == SignUpSteps::deviceInfo) {
         ui->stackedWidgetWorkArea->setCurrentWidget (ui->deviceInfo);
+        ui->deviceInfo->init ();
         ui->pushButtonStart->hide ();
         ui->pushButtonNext->show ();
     }
-    else if(curStep == SignUpSteps::customerInfo)
+    else if(curStep == SignUpSteps::customerInfo) {
         ui->stackedWidgetWorkArea->setCurrentWidget (ui->customerInfo);
+        ui->customerInfo->init ();
+        ui->pushButtonStart->setEnabled (false);
+    }
     else if(curStep == SignUpSteps::installing) {
         ui->stackedWidgetWorkArea->setCurrentWidget (ui->installing);
         ui->installing->startInstalling ();

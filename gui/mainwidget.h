@@ -28,6 +28,8 @@ private:
 
     void goToCurStep ();
 
+    void changeDeviceDetected (bool isDetected);
+
 private slots:
     void goToNextStep ();
 
@@ -46,6 +48,8 @@ private slots:
     void onErrorHandling (QString title, QString what, QString where, QString details);
 
     void onDevInfo (const DeviceInfoWgt::DeviceInfo & info);
+
+    void onCustomerComplete (bool isComplete);
 
 };
 

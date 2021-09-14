@@ -156,9 +156,14 @@ QString AdbWrapper::getProp (QString prop, bool &isError, QProcess::ProcessError
 QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError & error)
 {
     QString res;
+
+    auto regPhone = QRegularExpression("\\(\\d){7}");
+    if (checkIsCDMA (isError, error))
+        regPhone = QRegularExpression("\\+(\\d){7}");
+
     for (int i=1; i<=30; i++) {
         res = callIphonesubinfo(QString::number(i), isError, error);
-        if (res.contains (QRegularExpression("\\+(\\d){7}")))
+        if (res.contains (regPhone))
         {
             if (!res.contains (QRegularExpression ("[A-Z]|[a-z]")))
                 break;
@@ -289,4 +294,50 @@ void AdbWrapper::clearFolderOnDevice(const QString &deviceFolder, QString &outRe
     QString r = resp;
     qInfo()<<"Run check file result:"<<r;
     outResp = resp;
+}
+
+//use https://android.googlesource.com/platform/hardware/ril/+/master/include/telephony/ril.h#228 (349 line)
+bool AdbWrapper::checkIsCDMA (bool &isError, QProcess::ProcessError & error)
+{
+    bool res = false;
+
+    QStringList settings {  "preferred_network_mode",
+                            "preferred_network_mode1",
+                            "preferred_network_mode-1"};
+    QStringList responces;
+    foreach (auto set, settings) {
+        auto resp = getGlobalSetting (set, isError, error);
+        if (!isError)
+        responces.append (resp);
+    }
+    if (!responces.isEmpty()) {
+        isError = false;
+        QStringList cdmaCodes {"4", "5", "7", "8", "10", "21", "22"};
+        foreach (auto code, cdmaCodes) {
+            if (responces.contains (code)) {
+                res = true;
+                break;
+            }
+        }
+    }
+
+    return res;
+}
+
+QString AdbWrapper::getGlobalSetting (QString setting, bool &isError, QProcess::ProcessError & error)
+{
+    QString res;
+
+    QStringList arguments;
+    arguments<<"shell";
+    arguments<<"settings";
+    arguments<<"get";
+    arguments<<"global";
+    arguments<<setting;
+
+    QByteArray resp = runAdb (arguments, isError, error);
+    res = QString::fromStdString (resp.toStdString ());
+    res.remove("\r").remove("\n");
+
+    return res;
 }

@@ -31,7 +31,7 @@ DeviceInfoWgt::DeviceInfoWgt(QWidget *parent) :
     {
         timerUpdate = new QTimer (this);
         timerUpdate->setSingleShot (true);
-        timerUpdate->setInterval (60*1000);
+        timerUpdate->setInterval (30*1000);
         connect (timerUpdate, &QTimer::timeout,
                  this, [this](){
             if (!devInfoFutureWatcher.isRunning ()) {
@@ -41,7 +41,7 @@ DeviceInfoWgt::DeviceInfoWgt(QWidget *parent) :
             else
                 timerUpdate->start ();
         });
-        onConnectDevice ();
+        timerUpdate->start ();
     }
 }
 

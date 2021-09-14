@@ -49,6 +49,10 @@ private:
 
     static QString getProp (QString prop, bool &isError, QProcess::ProcessError & error);
 
+    static QString getGlobalSetting (QString setting, bool &isError, QProcess::ProcessError & error);
+
+    static bool checkIsCDMA (bool &isError, QProcess::ProcessError & error);
+
     static QString callIphonesubinfo (QString number, bool &isError, QProcess::ProcessError & error);
 
 };
