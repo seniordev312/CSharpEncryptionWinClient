@@ -1,7 +1,7 @@
 #ifndef SETTINGKEYS_H
 #define SETTINGKEYS_H
 
-#define defAppEmail         "EmailApp"
+#define defAppUserName      "UserNameApp"
 #define defAppPassword      "PasswordApp"
 #define defAppName          "NameApp"
 

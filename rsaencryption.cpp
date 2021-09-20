@@ -81,28 +81,6 @@ void RsaEncryption::generate()
 
 QByteArray RsaEncryption::decryptPriBase64(QByteArray &data)
 {
-#if 0
-    QByteArray before = data;
-    //QByteArray encodedBase64 = QByteArray::fromBase64(before);
-
-    unsigned char* encryptedData = (unsigned char*)before.data();
-
-    QByteArray result;
-    unsigned char* decryptedBin = new unsigned char[before.length()];
-    int resultLen = RSA_private_decrypt(before.length()
-                                        , encryptedData
-                                        , decryptedBin
-                                        , m_impl->rsa
-                                        , RSA_PKCS1_OAEP_PADDING);
-
-    if(resultLen == -1){
-        qInfo()<<"ERROR: RSA_private_decrypt:"<<ERR_error_string(ERR_get_error(), NULL);
-    }
-
-    result.append((char*)decryptedBin, resultLen);
-
-    return result;
-#else
     QByteArray before = data;
     QByteArray encodedBase64 = QByteArray::fromBase64(before);
 
@@ -127,7 +105,6 @@ QByteArray RsaEncryption::decryptPriBase64(QByteArray &data)
     }
 
     return result;
-#endif
 }
 
 QByteArray RsaEncryption::decryptPri(QByteArray &data)

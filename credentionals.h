@@ -8,11 +8,11 @@ class Credentionals
 public:
     static Credentionals& instance();
 
-    void setData (QString userEmail, QString userName, QString password);
-
-    QString userEmail ();
+    void setData (QString userName, QString name, QString password);
 
     QString userName ();
+
+    QString name ();
 
     QString password ();
 

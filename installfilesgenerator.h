@@ -12,17 +12,18 @@ class InstallFilesGenerator
         QByteArray content;
     };
 
-    enum InstFileIndex {PasscodeFile, ChallengeFile, CountWebFiles,
-                        AesKeyFile = CountWebFiles, IdFile, CountFiles};
+    enum InstFileWeb {PasscodeFile, ChallengeFile, CountWebFiles};
+
+    enum instFileAdb {ChallengeAdbFile, PasscodeAdbFile, AesKeyFile, IdFile, CountAdbFiles};
 
 public:
-    InstallFilesGenerator(const QString& folder);
+    InstallFilesGenerator (const QString& folder);
 
     static void createFilesContents ();
 
-    static bool generateAES_en(QByteArray aesKey, QString & passcode, QString & challenge); //to web posts
+    static bool generateAES_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge); //to web posts
 
-    bool generate(QByteArray rsaPulicKey, QString id, QStringList& outList);
+    bool generate (QByteArray rsaPulicKey, QString id, QStringList& outList);
 
 private:
     void generateFile (const QString &fullPath, int index);
@@ -37,6 +38,8 @@ private:
 
     static QByteArray generateIV ();
 
-    static QList <InstFileStruct> fileContents; // <fileName, fileContent>
+    static QList <QByteArray> fileWebContents; // <fileContent>
+
+    static QList <InstFileStruct> fileAdbContents; // <fileName, fileContent>
 
 };

@@ -53,6 +53,51 @@ CustomerInfoWgt::CustomerInfoWgt(QWidget *parent) :
              this, &CustomerInfoWgt::onComplete);
 }
 
+CustomerInfoWgt::Data CustomerInfoWgt::getData ()
+{
+    Data res;
+
+    res.FName       = ui->lineEditFirstName->text ();
+    res.LName       = ui->lineEditLastName->text ();
+    res.HPhone      = ui->lineEditHomePhone->text ();
+    res.BPhone      = ui->lineEditBusinessPhone->text ();
+    res.Sticker     = ui->lineEditStickerNumber->text ();
+
+    res.OptRestrct  = ( ui->comboBoxOptionalRestrictions->currentText () == "Yes" );
+    if (res.OptRestrct) {
+        for (int i=0; i<ui->listWidgetOptionalRestrictions->count (); i++) {
+            auto item = ui->listWidgetOptionalRestrictions->item (i);
+            auto text = item->text ();
+            auto isOn = (item->checkState() != Qt::Unchecked);
+            if ("Camera" == text)
+                res.Cam = isOn;
+            else if ("Gallery" == text)
+                res.Galry = isOn;
+            else if ("Music" == text)
+                res.Music = isOn;
+            else if ("SD Card" == text)
+                res.SDCard = isOn;
+            else if ("File Manager" == text)
+                res.FMngr = isOn;
+            else if ("BT File Transfer" == text)
+                res.BTFmngr = isOn;
+            else if ("Outgoing Calls WL" == text)
+                res.OutCalWL = isOn;
+            else if ("Incoming Calls WL" == text)
+                res.CallWL = isOn;;
+        }
+    }
+
+    //???????????????????
+    res.Blutoth;
+
+    res.ParntBlock  = ( ui->comboBoxParentalBlock->currentText () == "Yes" );
+    res.ParntCode   = ui->lineEditParentalCode->text ();
+    res.ParntNum    = ui->lineEditParentalPhoneNumber->text ();
+
+    return res;
+}
+
 void CustomerInfoWgt::onComplete ()
 {
     bool isComplete = !(ui->lineEditFirstName->text().isEmpty()
@@ -60,73 +105,6 @@ void CustomerInfoWgt::onComplete ()
         || ui->lineEditHomePhone->text().isEmpty()
         || ui->lineEditStickerNumber->text().isEmpty());
     emit sigComplete (isComplete);
-
-}
-
-void CustomerInfoWgt::postToWebApp ()
-{
-    //send to WebApp
-    {
-        QJsonObject obj;
-        obj["UserEmail"]        = Credentionals::instance ().userEmail ();
-        obj["Password"]         = Credentionals::instance ().password ();
-        obj["FirstName"]        = ui->lineEditFirstName->text ();
-        obj["LastName"]         = ui->lineEditLastName->text ();
-        obj["HomePhone"]        = ui->lineEditHomePhone->text ();
-        obj["BusinessPhone"]    = ui->lineEditBusinessPhone->text ();
-        obj["StickerNumber"]    = ui->lineEditStickerNumber->text ();
-        if (ui->comboBoxFilterLevel->isHidden())
-            obj["FilterLevel"]  = ui->comboBoxCommunity->currentText ();
-        else
-            obj["FilterLevel"]  = ui->comboBoxFilterLevel->currentText ();
-        obj["IsOptionalRestrictions"]    = ( ui->comboBoxOptionalRestrictions->currentText () == "Yes" );
-
-        bool isHidden = ui->listWidgetOptionalRestrictions->isHidden();
-        for (int i=0; i<ui->listWidgetOptionalRestrictions->count (); i++) {
-            auto item = ui->listWidgetOptionalRestrictions->item (i);
-            auto text = item->text ();
-            auto isOn = isHidden && (item->checkState() != Qt::Unchecked);
-            if ("Camera" == text)
-                obj["IsCamera"] = isOn;
-            else if ("Gallery" == text)
-                obj["IsGallery"] = isOn;
-            else if ("Music" == text)
-                obj["IsMusic"] = isOn;
-            else if ("SD Card" == text)
-                obj["IsSdCard"] = isOn;
-            else if ("File Manager" == text)
-                obj["IsFileManager"] = isOn;
-            else if ("BT File Transfer" == text)
-                obj["IsBtFileTransfer"] = isOn;
-            else if ("Outgoing Calls WL" == text)
-                obj["IsOutgoingCallsWL"] = isOn;
-            else if ("Incoming Calls WL" == text)
-                obj["IsIncomingCallsWL"] = isOn;
-        }
-
-        obj["IsParentalBlock"]      = ( ui->comboBoxParentalBlock->currentText () == "Yes" );
-        obj["ParentalBlockCode"]    = ui->lineEditParentalCode->text ();
-        obj["ParentalPhoneNumber"]  = ui->lineEditParentalPhoneNumber->text ();
-
-        QJsonDocument doc(obj);
-
-        QString endpoint = defEndpoint;
-        const QUrl url(endpoint+"/userInfo");
-        QNetworkRequest request(url);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
-
-        connect(reply, &QNetworkReply::finished, this, [=](){
-            if(reply->error() != QNetworkReply::NoError){
-                emit sigError   ("Error: WebApp",
-                                "Webapp error: error occured during sending post to WebApp",
-                                "An error occured during sending requests to WebApp. See \"Details\"\n"
-                                "section to get more detailed information about the error.",
-                                reply->errorString());
-            }
-            reply->deleteLater();
-        });
-    }
 
 }
 

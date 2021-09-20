@@ -25,7 +25,7 @@ LoginWgt::LoginWgt(QWidget *parent) :
              this, &LoginWgt::sigSignUp);
     connect (ui->pushButtonLogin, &QPushButton::clicked,
              this, &LoginWgt::onLogin);
-    connect (ui->lineEditEmail, &QLineEdit::textChanged,
+    connect (ui->lineEditUsername, &QLineEdit::textChanged,
              this, &LoginWgt::checkConditionsLogin);
     connect (ui->lineEditPassword, &QLineEdit::textChanged,
              this, &LoginWgt::checkConditionsLogin);
@@ -36,7 +36,7 @@ LoginWgt::LoginWgt(QWidget *parent) :
     ui->lineEditPassword->setEchoMode (QLineEdit::Password);
 
     //event filter
-    ui->lineEditEmail->installEventFilter (this);
+    ui->lineEditUsername->installEventFilter (this);
     ui->lineEditPassword->installEventFilter (this);
 
     m_manager = new QNetworkAccessManager(this);
@@ -49,7 +49,7 @@ LoginWgt::LoginWgt(QWidget *parent) :
 bool LoginWgt::eventFilter (QObject *watched, QEvent *event)
 {
     if (QEvent::KeyRelease == event->type ()
-        && (ui->lineEditEmail == watched || ui->lineEditPassword == watched)) {
+        && (ui->lineEditUsername == watched || ui->lineEditPassword == watched)) {
 
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         if (Qt::Key_Return == keyEvent->key ()
@@ -71,13 +71,26 @@ void LoginWgt::onQuestion ()
 
 void LoginWgt::checkConditionsLogin ()
 {
-    ui->pushButtonLogin->setEnabled (!ui->lineEditEmail->text ().isEmpty ()
+    ui->pushButtonLogin->setEnabled (!ui->lineEditUsername->text ().isEmpty ()
                                      && !ui->lineEditPassword->text ().isEmpty ());
 }
 
 void LoginWgt::onLogin ()
 {
-    auto email = ui->lineEditEmail->text ();
+#if 1
+    QSettings settings;
+    auto storedEmail = settings.value (defAppUserName).toString ();
+    auto storedPassword = settings.value (defAppPassword).toString ();
+    if (ui->lineEditUsername->text () == storedEmail &&
+        ui->lineEditPassword->text () == storedPassword)
+        emit sigSuccess ();
+    else {
+        changeProperty (ui->labelLoginStatus, "Status", "fail");
+        ui->labelLoginStatus->setText ("Credentionals are not valid");
+    }
+
+#else
+    auto email = ui->lineEditUsername->text ();
     auto password = ui->lineEditPassword->text ();
     auto hashPassw = QString::fromStdString (QCryptographicHash::hash(password.toUtf8(),
                               QCryptographicHash::Sha256).toHex().toStdString ());
@@ -129,6 +142,7 @@ void LoginWgt::onLogin ()
             reply->deleteLater();
         });
     }
+#endif
 }
 
 void LoginWgt::clear ()
@@ -141,7 +155,7 @@ void LoginWgt::clear ()
 
 void LoginWgt::showEvent(QShowEvent *event)
 {
-    ui->lineEditEmail->setFocus ();
+    ui->lineEditUsername->setFocus ();
     QWidget::showEvent(event);
 }
 

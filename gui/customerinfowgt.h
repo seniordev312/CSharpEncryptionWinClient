@@ -13,13 +13,53 @@ class CustomerInfoWgt : public QWidget
     Q_OBJECT
 
 public:
+
+    struct Data {
+        QString FName;
+
+        QString LName;
+
+        QString HPhone;
+
+        QString BPhone;
+
+        QString Sticker;
+
+        bool OptRestrct {false};
+
+        bool Cam {false};
+
+        bool Galry {false};
+
+        bool Blutoth {false};
+
+        bool Music {false};
+
+        bool SDCard {false};
+
+        bool FMngr {false};
+
+        bool BTFmngr {false};
+
+        bool OutCalWL {false};
+
+        bool CallWL {false};
+
+        bool ParntBlock {false};
+
+        QString ParntCode;
+
+        QString ParntNum;
+
+    };
+
     explicit CustomerInfoWgt(QWidget *parent = nullptr);
 
     ~CustomerInfoWgt();
 
     void init ();
 
-    void postToWebApp ();
+    Data getData ();
 
 private:
     Ui::CustomerInfoWgt *ui;

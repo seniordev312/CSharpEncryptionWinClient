@@ -17,6 +17,21 @@ class DeviceInfoWgt : public QWidget
     Q_OBJECT
 
 public:
+
+    struct Data {
+        QString IMEI;
+
+        QString Manufacturer;
+
+        QString Model;
+
+        QString Version;
+
+        QString Serial;
+
+        QString PNumber;
+    };
+
     explicit DeviceInfoWgt(QWidget *parent = nullptr);
 
     ~DeviceInfoWgt();
@@ -44,7 +59,7 @@ public:
 
     void init ();
 
-    void postToWebApp ();
+    Data getData ();
 
 private:
     Ui::DeviceInfoWgt *ui;

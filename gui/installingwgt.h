@@ -7,8 +7,6 @@
 
 #include "rsaencryption.h"
 
-
-
 class QNetworkAccessManager;
 class QTimer;
 
@@ -29,6 +27,8 @@ public:
 
     void startInstalling ();
 
+    void setIdDevice (QString idDevice);
+
 private:
     Ui::InstallingWgt *ui;
 
@@ -48,13 +48,11 @@ private:
 
     void runDownloadFile (const QString& id, const QByteArray& key);
 
-    void postToWebInstallFiles (const QString& id, const QByteArray& key);
-
     bool saveToDisk(const QString &filename, QIODevice *data);
 
     void writeLog(const QString& msg);
 
-    void installApkOnDevice (QString id);
+    void installApkOnDevice ();
 
     void onStartWorker();
 
@@ -69,6 +67,8 @@ private:
     QString tmp_file;
 
     QTemporaryDir * tmp_dir {nullptr};
+
+    QString idDevice_;
 
 private slots:
     void onTimeoutPB ();

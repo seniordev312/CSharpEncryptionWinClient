@@ -12,7 +12,9 @@
 #include "rsaencryption.h"
 #include "gui/utils.h"
 
-QList <InstallFilesGenerator::InstFileStruct> InstallFilesGenerator::fileContents (CountFiles);
+QList <QByteArray> InstallFilesGenerator::fileWebContents (CountWebFiles);
+
+QList <InstallFilesGenerator::InstFileStruct> InstallFilesGenerator::fileAdbContents (CountAdbFiles);
 
 InstallFilesGenerator::InstallFilesGenerator(const QString &folder):m_folder(folder)
 {
@@ -21,23 +23,30 @@ InstallFilesGenerator::InstallFilesGenerator(const QString &folder):m_folder(fol
 
 void InstallFilesGenerator::createFilesContents ()
 {
-    fileContents[PasscodeFile]  = {"codes.txt", generatePasscode ()};
-    fileContents[ChallengeFile] = {"2560.txt", generateChallenge ()};
-    fileContents[AesKeyFile]    = {"aes.key", ""};
-    fileContents[IdFile]        = {"id.txt", ""};
+    auto passcodeWeb = generatePasscode ();
+    auto passcodeAdb = QCryptographicHash::hash (passcodeWeb,
+                                                 QCryptographicHash::Sha512).toHex ();
+
+    fileWebContents[PasscodeFile]  = {passcodeWeb};
+    fileWebContents[ChallengeFile] = {generateChallenge ()};
+
+    fileAdbContents[AesKeyFile]    = {"aes.key", ""};
+    fileAdbContents[AesKeyFile]    = {"aes.key", ""};
+    fileAdbContents[IdFile]        = {"id.txt", ""};
 }
 
 //to web posts
-bool InstallFilesGenerator::generateAES_en (QByteArray aesKey, QString &passcode, QString &challenge)
+bool InstallFilesGenerator::generateAES_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge)
 {
     createFilesContents ();
     AesEncryption encryption;
     bool ok = true;
+    aesKey = generateAES256Key();
+    iv = generateIV();
     for (int i = 0; i < CountWebFiles; i++) {
         QBuffer buffSource;
-        buffSource.setBuffer (&fileContents[i].content);
+        buffSource.setBuffer (&fileWebContents[i]);
         QBuffer buffEncrypted;
-        QByteArray iv = generateIV();
         ok = encryption.encryptIODevice (&buffSource, &buffEncrypted, aesKey, iv);
         if (!ok)
             break;
@@ -46,6 +55,9 @@ bool InstallFilesGenerator::generateAES_en (QByteArray aesKey, QString &passcode
         else if (2==i)
             challenge = buffEncrypted.buffer();
     }
+
+
+
     return ok;
 }
 
@@ -55,16 +67,8 @@ QByteArray InstallFilesGenerator::generatePasscode ()
     for (int i=0; i<200; i++) {
         quint64 pass =  QRandomGenerator::global ()->bounded (static_cast<quint64> (pow (10, 15)),
                                                               static_cast<quint64> (pow (10, 16) - 1));
-        auto hash1 = QString::fromStdString (QCryptographicHash::hash (QString::number (pass).toUtf8 (),
-                                            QCryptographicHash::Sha512)
-                                            .toHex ().toStdString ()).toLower ();
-        auto hash2 = QString::fromStdString (QCryptographicHash::hash (hash1.toUtf8 (),
-                                            QCryptographicHash::Sha512)
-                                            .toHex ().toStdString ()).toUpper ();
-        auto hash3 = QString::fromStdString (QCryptographicHash::hash (hash2.toUtf8 (),
-                                            QCryptographicHash::Sha512)
-                                            .toHex ().toStdString ()).toLower ();
-        res.append (hash3.toUtf8 ()).append("\r\n");
+
+        res.append (pass).append("\r\n");
     }
     return res;
 }
@@ -89,7 +93,6 @@ QByteArray InstallFilesGenerator::generateChallenge ()
                                              QCryptographicHash::Sha512).toHex ();
         res += lastHash;
     }
-
 
     return res;
 }
@@ -116,11 +119,11 @@ bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStrin
     if(ok)
     {
         AesEncryption encryption;
-        fileContents[IdFile].content = id.toUtf8();
-        for (int index = 0; index < CountFiles;index++){
+        fileAdbContents[IdFile].content = id.toUtf8();
+        for (int index = 0; index < CountAdbFiles;index++){
             if (IdFile ==index)
                 continue;
-            QString baseFileName =QString("file_%1").arg(fileContents[index].name);
+            QString baseFileName =QString("file_%1").arg(fileAdbContents[index].name);
             QString sourceFile = QString("%1/%2.txt").arg(m_folder, baseFileName);
             generateFile(sourceFile, index);
             //encode file
@@ -139,7 +142,7 @@ void InstallFilesGenerator::generateFile(const QString &fullPath, int index)
 {
     QFile file(fullPath);
     if(file.open(QIODevice::ReadWrite)){
-        QString data = fileContents[index].content;
+        QString data = fileAdbContents[index].content;
         file.write(data.toLatin1());
         file.close();
     }

@@ -132,6 +132,7 @@ QString AdbWrapper::callIphonesubinfo (QString number, bool & isError, QProcess:
     auto exp = QRegularExpression ("\\'(.)*\\'");
     for (const QRegularExpressionMatch &match : exp.globalMatch (strNotHandled))
         res += match.captured();
+
     res.remove('\'').remove('.');
 
     return res;
@@ -157,7 +158,7 @@ QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError
 {
     QString res;
 
-    auto regPhone = QRegularExpression("\\(\\d){7}");
+    auto regPhone = QRegularExpression("(\\d){7}");
     if (checkIsCDMA (isError, error))
         regPhone = QRegularExpression("\\+(\\d){7}");
 

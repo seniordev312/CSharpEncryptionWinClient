@@ -10,18 +10,18 @@ Credentionals& Credentionals::instance ()
     return singleton;
 }
 
-void Credentionals::setData (QString userEmail, QString userName, QString password)
+void Credentionals::setData (QString userName, QString name, QString password)
 {
     m_rsaEncryption.generate ();
 
-    auto userEmail_ = m_rsaEncryption.encryptPub ( userEmail.toUtf8 ());
-    auto userName_ = m_rsaEncryption.encryptPub (userName.toUtf8 ());
+    auto userName_ = m_rsaEncryption.encryptPub ( userName.toUtf8 ());
+    auto name_ = m_rsaEncryption.encryptPub (name.toUtf8 ());
     auto password_ = m_rsaEncryption.encryptPub (password.toUtf8 ());
 
     QSettings settings;
-    settings.setValue (defAppEmail, userEmail_);
+    settings.setValue (defAppUserName, userName_);
     settings.setValue (defAppPassword, password_);
-    settings.setValue (defAppName, userName_);
+    settings.setValue (defAppName, name_);
 }
 
 QString Credentionals::data (QString settingsKey)
@@ -33,12 +33,12 @@ QString Credentionals::data (QString settingsKey)
     return res;
 }
 
-QString Credentionals::userEmail ()
+QString Credentionals::userName ()
 {
-    return data (defAppEmail);
+    return data (defAppUserName);
 }
 
-QString Credentionals::userName ()
+QString Credentionals::name ()
 {
     return data (defAppName);
 }

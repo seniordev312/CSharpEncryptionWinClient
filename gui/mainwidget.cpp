@@ -2,11 +2,17 @@
 #include "ui_mainwidget.h"
 
 #include <QDebug>
+#include <QSettings>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include "settingkeys.h"
 #include "errorhandlingdlg.h"
 #include "utils.h"
 #include "credentionals.h"
+#include "installfilesgenerator.h"
 
 MainWgt::MainWgt(QWidget *parent) :
     QWidget(parent),
@@ -68,6 +74,9 @@ MainWgt::MainWgt(QWidget *parent) :
         connect (ui->pushButtonStartNew, &QPushButton::clicked,
                  this, &MainWgt::onStartNew);
     }
+
+    m_manager = new QNetworkAccessManager (this);
+
     changeDeviceDetected (false);
     goToNextStep ();
 }
@@ -89,6 +98,7 @@ void MainWgt::changeDeviceDetected (bool isDetected)
 void MainWgt::onDevInfo (const DeviceInfoWgt::DeviceInfo & info)
 {
     changeDeviceDetected (info.isConnected);
+    ui->pushButtonNext->setEnabled (info.isConnected);
 }
 
 void MainWgt::onErrorHandling (QString title, QString what, QString where, QString details)
@@ -118,10 +128,116 @@ void MainWgt::onLogout ()
 
 void MainWgt::onStart ()
 {
+#ifdef WEBAPI
+
+    auto deviceData     = ui->deviceInfo->getData ();
+    auto customerData   = ui->customerInfo->getData ();
+
+    QByteArray aesKey;
+    QByteArray iv;
+    QString passcode;
+    QString challenge;
+    InstallFilesGenerator::generateAES_en (aesKey, iv, passcode, challenge);
+
+    QJsonObject obj;
+
+    //B0
+    QJsonObject objB0;
+    {
+        objB0 ["IMEI"]          = deviceData.IMEI;
+        objB0 ["Manufacturer"]  = deviceData.Manufacturer;
+        objB0 ["Model"]         = deviceData.Model;
+        objB0 ["Version"]       = deviceData.Version;
+        objB0 ["Serial"]        = deviceData.Serial;
+        objB0 ["PNumber"]       = deviceData.PNumber;
+        objB0 ["FName"]         = customerData.FName;
+        objB0 ["LName"]         = customerData.LName;
+        objB0 ["HPhone"]        = customerData.HPhone;
+        objB0 ["BPhone"]        = customerData.BPhone;
+        objB0 ["Sticker"]       = customerData.Sticker;
+        objB0 ["SecKey"]        = QString (aesKey);
+        objB0 ["SecIV"]         = QString (iv);
+
+        //??????????????
+        objB0 ["AppVer"];
+        objB0 ["Brand"];
+    }
+    obj ["B0"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB0).toJson ()));
+
+    //B1
+    QJsonObject objB1;
+    {
+        objB1 ["OptRestrct"]    = customerData.OptRestrct;
+        objB1 ["Cam"]           = customerData.Cam;
+        objB1 ["Galry"]         = customerData.Galry;
+        objB1 ["Music"]         = customerData.Music;
+        objB1 ["SDCard"]        = customerData.SDCard;
+        objB1 ["FMngr"]         = customerData.FMngr;
+        objB1 ["BTFmngr"]       = customerData.BTFmngr;
+        objB1 ["OutCalWL"]      = customerData.OutCalWL;
+        objB1 ["CallWL"]        = customerData.CallWL;
+        objB1 ["ParntBlock"]    = customerData.ParntBlock;
+        objB1 ["ParntCode"]     = customerData.ParntCode;
+        objB1 ["ParntNum"]      = customerData.ParntNum;
+
+        //??????????????
+        objB1 ["Blutoth"]       = customerData.Blutoth;
+
+        //??????????????
+        objB0 ["ParntVerfd"];
+    }
+    obj ["B1"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB1).toJson ()));
+
+    obj ["B2"] = passcode;
+    obj ["B3"] = challenge;
+
+    QJsonDocument doc (obj);
+
+    const QUrl url (defWebAppEndpoint);
+    QNetworkRequest request (url);
+    request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader ("Type", "3");
+    //authenication
+    {
+        QString username    = Credentionals::instance ().userName ();
+        QString hashPassw   = Credentionals::instance ().password ();
+
+        //before encryption
+        QJsonObject objAuth;
+        objAuth["username"] = username;
+        objAuth["password"] = hashPassw;
+        QJsonDocument docAuth (objAuth);
+
+        auto authData = RsaEncryption::encryptData (defWebAppPublicKey, docAuth.toJson ());
+
+        request.setRawHeader ("Auth", authData);
+    }
+    QNetworkReply* reply = m_manager->post (request, doc.toJson ());
+
+    connect(reply, &QNetworkReply::finished, this, [=](){
+        if(reply->error() == QNetworkReply::NoError){
+            auto resp = reply->readAll ();
+            auto doc = QJsonDocument::fromJson (resp);
+            auto obj = doc.object ();
+            QString id = obj ["DeviceID"].toString ();
+            ui->installing->setIdDevice (id);
+            curStep = SignUpSteps::installing;
+            goToCurStep ();
+
+        }else{
+            auto resp = reply->readAll ();
+            onErrorHandling   ( "Error: WebApp",
+                                "Webapp error: error occured during checking invitation in WebApp",
+                                "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                "section to get more detailed information about the error.",
+                                reply->errorString() + resp);
+        }
+        reply->deleteLater();
+    });
+#else
     curStep = SignUpSteps::installing;
-    ui->deviceInfo->postToWebApp ();
-    ui->customerInfo->postToWebApp ();
     goToCurStep ();
+#endif
 }
 
 void MainWgt::onStartNew ()
@@ -134,7 +250,12 @@ void MainWgt::onStartNew ()
 void MainWgt::onLoginSignUp ()
 {
     {
+#if 1
+        QSettings settings;
+        auto name = settings.value (defAppName).toString ();
+#else
         auto name = Credentionals::instance().userName();
+#endif
         ui->labelStatus->setText ("Logged in as : " + name);
     }
     goToNextStep ();

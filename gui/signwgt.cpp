@@ -7,10 +7,14 @@
 #include <QMessageAuthenticationCode>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
 
 #include "utils.h"
 #include "settingkeys.h"
 #include "credentionals.h"
+#include "rsaencryption.h"
+
+#define defInvitationCode "1234"
 
 SignWgt::SignWgt(QWidget *parent) :
     QWidget(parent),
@@ -45,7 +49,7 @@ SignWgt::SignWgt(QWidget *parent) :
     ui->lineEditInvitationCode->installEventFilter (this);
     ui->lineEditPassword->installEventFilter (this);
     ui->lineEditName->installEventFilter (this);
-    ui->lineEditEmail->installEventFilter (this);
+    ui->lineEditUsername->installEventFilter (this);
     ui->lineEditRetypePassword->installEventFilter (this);
 
     m_manager = new QNetworkAccessManager(this);
@@ -89,8 +93,18 @@ void SignWgt::clear ()
 }
 
 void SignWgt::onSignUp ()
-{    
-    auto email = ui->lineEditEmail->text ();
+{
+#ifndef WEBAPI
+    QSettings settings;
+    auto email = ui->lineEditUsername->text ();
+    settings.setValue (defAppUserName, email);
+    auto password = ui->lineEditPassword->text ();
+    settings.setValue (defAppPassword, password);
+    auto name = ui->lineEditName->text ();
+    settings.setValue (defAppName, name);
+    emit sigSuccess ();
+#else
+    auto email = ui->lineEditUsername->text ();
     auto password = ui->lineEditPassword->text ();
     auto hashPassw = QCryptographicHash::hash(password.toUtf8(),
                      QCryptographicHash::Sha256).toHex();
@@ -99,16 +113,20 @@ void SignWgt::onSignUp ()
     //send to WebApp
     {
         QJsonObject obj;
-        obj["UserName"]     = name;
-        obj["UserEmail"]    = email;
-        obj["Password"]     = QString::fromStdString (hashPassw.toStdString ());
+        obj["username"]     = email;
+        obj["password"]     = QString::fromStdString (hashPassw.toStdString ());
+        obj["code"]         = code_;
         QJsonDocument doc(obj);
 
-        QString endpoint = defEndpoint;
-        const QUrl url(endpoint+"/signUp");
+        QJsonObject objEncrypted;
+        objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()));
+        QJsonDocument docEnctypted (objEncrypted);
+
+        const QUrl url(defWebAppEndpoint);
         QNetworkRequest request(url);
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
+        request.setRawHeader ("Type", "2");
+        QNetworkReply* reply = m_manager->post (request, docEnctypted.toJson ());
 
         connect(reply, &QNetworkReply::finished, this, [=](){
             if(reply->error() != QNetworkReply::NoError){
@@ -119,19 +137,17 @@ void SignWgt::onSignUp ()
                                 reply->errorString());
             }
             else {
-                QString resp = QString(reply->readAll());
-                if ("1" == resp) {
-                    //store locally
-                    {
-                        Credentionals::instance ().setData (email, name, hashPassw);
-                    }
-
-                    emit sigSuccess ();
+                //store locally
+                {
+                    Credentionals::instance ().setData (email, name, hashPassw);
                 }
+
+                emit sigSuccess ();
             }
             reply->deleteLater();
         });
     }
+#endif
 }
 
 void SignWgt::onQuestion ()
@@ -148,27 +164,53 @@ void SignWgt::onActivationCodeChanged ()
 
 void SignWgt::onSend ()
 {
-    auto code = ui->lineEditInvitationCode->text ().toUtf8 ();
+#ifndef WEBAPI
+    onlyInviationView (defInvitationCode == ui->lineEditInvitationCode->text ());
+    ui->lineEditUsername->setText ("Username");
+    ui->lineEditName->setText ("Name");
+#else
 
-    QString endpoint = defEndpoint;
-    const QUrl url(endpoint+"/invitation");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply* reply = m_manager->post(request, code);
+    //before encryption
+    QJsonObject obj;
+    obj["code"] = ui->lineEditInvitationCode->text ();
+    QJsonDocument doc (obj);
+
+    QJsonObject objEncrypted;
+    objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()));
+    QJsonDocument docEnctypted (objEncrypted);
+
+    const QUrl url (defWebAppEndpoint);
+    QNetworkRequest request (url);
+    request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader ("Type", "1");
+    QNetworkReply* reply = m_manager->post (request, docEnctypted.toJson ());
+
+    auto code = ui->lineEditInvitationCode->text ();
+    code_.clear ();
 
     connect(reply, &QNetworkReply::finished, this, [=](){
         if(reply->error() == QNetworkReply::NoError){
-            QString resp = QString(reply->readAll());
-            onlyInviationView ("1" == resp);
+            auto resp = reply->readAll ();
+            auto doc = QJsonDocument::fromJson (resp);
+            auto obj = doc.object ();
+            if (true ==  obj ["Valid"].toBool ()) {
+                ui->lineEditUsername->setText (obj ["Username"].toString ());
+                ui->lineEditName->setText (obj ["Name"].toString ());
+                code_ = code;
+            }
+
+            onlyInviationView (obj["Valid"].toBool());
         }else{
+            auto resp = reply->readAll ();
             emit sigError   ("Error: WebApp",
                             "Webapp error: error occured during checking invitation in WebApp",
                             "An error occured during sending requests to WebApp. See \"Details\"\n"
                             "section to get more detailed information about the error.",
-                            reply->errorString());
+                            reply->errorString() + resp);
         }
         reply->deleteLater();
     });
+#endif
 }
 
 void SignWgt::checkConditionsSignUp ()

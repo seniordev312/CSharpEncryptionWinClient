@@ -103,3 +103,5 @@ FORMS += \
 
 RESOURCES += \
     res.qrc
+
+DEFINES += WEBAPI

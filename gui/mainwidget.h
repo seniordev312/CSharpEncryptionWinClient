@@ -5,6 +5,8 @@
 
 #include "gui/deviceinfowgt.h"
 
+class QNetworkAccessManager;
+
 namespace Ui {
 class MainWgt;
 }
@@ -29,6 +31,8 @@ private:
     void goToCurStep ();
 
     void changeDeviceDetected (bool isDetected);
+
+    QNetworkAccessManager* m_manager {nullptr};
 
 private slots:
     void goToNextStep ();

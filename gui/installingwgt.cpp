@@ -69,6 +69,11 @@ void InstallingWgt::startInstalling ()
     sendApkRequest ();
 }
 
+void InstallingWgt::setIdDevice (QString idDevice)
+{
+    idDevice_ = idDevice;
+}
+
 void InstallingWgt::generateRsa()
 {
     m_rsaEncryption.generate();
@@ -83,7 +88,7 @@ void InstallingWgt::sendApkRequest()
     m_rsaEncryption.generate();
     writeLog("[OK] Generate RSA");
 
-    QString endpoint = defEndpoint;
+    QString endpoint = defWebServerEndpoint;
     const QUrl url(endpoint+"/encrypt");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -116,7 +121,7 @@ void InstallingWgt::sendApkRequest()
 
             bool isValid = !key.isEmpty() && !id.isEmpty();
             if(isValid){
-                postToWebInstallFiles(id,key);
+                runDownloadFile(id,key);
             }else{
                writeLog(QString("[FAILED] Parse response.'%1'").arg(resp));
                onInstallError ("Error: WebApp",
@@ -142,63 +147,9 @@ void InstallingWgt::sendApkRequest()
 
 }
 
-void InstallingWgt::postToWebInstallFiles (const QString& id, const QByteArray& key)
-{
-    QJsonObject obj;
-    obj["UserEmail"]    = Credentionals::instance ().userEmail ();
-    obj["Password"]     = Credentionals::instance ().password ();
-    obj["Id"]     = id;
-
-    QString content_passcode;
-    QString content_challenge;
-    bool ok = InstallFilesGenerator::generateAES_en (key, content_passcode, content_challenge);
-    if (!ok){
-        emit sigError   ("Error: Encryption",
-                        "Webapp error: error occured during encrypting install files",
-                        "An error occured during encrypting install files. See \"Details\"\n"
-                        "section to get more detailed information about the error.",
-                        "");
-    }
-    obj["File_passcode"] = content_passcode;
-    obj["File_challenge"] = content_challenge;
-
-    QJsonDocument doc(obj);
-
-    QString endpoint = defEndpoint;
-    const QUrl url(endpoint+"/apkData");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply* reply = m_manager->post (request, doc.toJson ());
-    connect(reply, &QNetworkReply::finished, this, [=](){
-        if(reply->error() != QNetworkReply::NoError){
-            emit sigError   ("Error: WebApp",
-                            "Webapp error: error occured during sending post to WebApp",
-                            "An error occured during sending requests to WebApp. See \"Details\"\n"
-                            "section to get more detailed information about the error.",
-                            reply->errorString());
-        }
-        else {
-            auto resp = QString (reply->readAll ());
-            if ("1" == resp) {
-                runDownloadFile(id,key);
-            }
-            else {
-                emit sigError   ("Error: WebApp",
-                                "Webapp error: can not create id of apk",
-                                "An error occured during sending requests to WebApp. See \"Details\"\n"
-                                "section to get more detailed information about the error.",
-                                reply->errorString());
-            }
-
-        }
-        reply->deleteLater();
-    });
-
-}
-
 void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
 {
-    QString endpoint = defEndpoint;
+    QString endpoint = defWebServerEndpoint;
     const QUrl url(endpoint+"/download?id="+id);
     QNetworkRequest request(url);
     writeLog(QString("Donload file..."));
@@ -233,7 +184,7 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
                     int ret = aes.dectyptFile(encodedFilePath, key, tmp_file);
                     if(ret == 0){
                         writeLog( QString("[OK] Decrypt file"));
-                        installApkOnDevice (id);
+                        installApkOnDevice ();
                     }else{
                         writeLog( QString("[FAILED] Decrypt file"));
                         emit sigFail ();
@@ -291,7 +242,7 @@ void InstallingWgt::writeLog(const QString &msg)
 }
 
 
-void InstallingWgt::installApkOnDevice (QString id)
+void InstallingWgt::installApkOnDevice ()
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
     apkFilaPath = tmp_file;
@@ -308,7 +259,7 @@ void InstallingWgt::installApkOnDevice (QString id)
     QString localFolder = tmpFolder;
 
     if(m_worker == nullptr){
-        m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder, id.toUtf8());
+        m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder, idDevice_.toUtf8());
         connect(m_worker, &ApkInstallWorker::message, this, &InstallingWgt::writeLog, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::sigError, this, &InstallingWgt::onInstallError, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::finished, this, &InstallingWgt::onCompleteWorker, Qt::QueuedConnection);

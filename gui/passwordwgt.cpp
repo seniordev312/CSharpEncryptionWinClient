@@ -13,7 +13,7 @@ PasswordWgt::PasswordWgt(QWidget *parent) :
 
 void PasswordWgt::clear ()
 {
-    ui->lineEditEmail->clear ();
+    ui->lineEditUsername->clear ();
 }
 
 PasswordWgt::~PasswordWgt()

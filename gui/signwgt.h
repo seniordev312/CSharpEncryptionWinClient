@@ -30,6 +30,8 @@ private:
 
     void onlyInviationView (bool activated, bool init = false);
 
+    QString code_;
+
 private slots:
     void onQuestion ();
 
