@@ -104,4 +104,4 @@ FORMS += \
 RESOURCES += \
     res.qrc
 
-DEFINES += WEBAPI
+#DEFINES += WEBAPI

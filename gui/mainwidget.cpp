@@ -51,8 +51,8 @@ MainWgt::MainWgt(QWidget *parent) :
     {
         connect (ui->deviceInfo, &DeviceInfoWgt::sigError,
                  this, &MainWgt::onErrorHandling);
-        connect (ui->deviceInfo, &DeviceInfoWgt::sigDevInfo,
-                 this, &MainWgt::onDevInfo);      
+        connect (ui->deviceInfo, &DeviceInfoWgt::sigConnected,
+                 this, &MainWgt::onConnected);
     }
 
     //customer info
@@ -79,6 +79,7 @@ MainWgt::MainWgt(QWidget *parent) :
 
     changeDeviceDetected (false);
     goToNextStep ();
+    ui->pushButtonNext->setEnabled (false);
 }
 
 void MainWgt::onCustomerComplete (bool isComplete)
@@ -95,10 +96,10 @@ void MainWgt::changeDeviceDetected (bool isDetected)
         ui->labelDeviceStatusValue->setText ("DEVICE NOT DETECTED");
 }
 
-void MainWgt::onDevInfo (const DeviceInfoWgt::DeviceInfo & info)
+void MainWgt::onConnected (bool isConnected)
 {
-    changeDeviceDetected (info.isConnected);
-    ui->pushButtonNext->setEnabled (info.isConnected);
+    changeDeviceDetected (isConnected);
+    ui->pushButtonNext->setEnabled (isConnected);
 }
 
 void MainWgt::onErrorHandling (QString title, QString what, QString where, QString details)

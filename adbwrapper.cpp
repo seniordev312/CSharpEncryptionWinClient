@@ -7,6 +7,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 #include <QMetaEnum>
+#include <QVersionNumber>
 
 AdbWrapper::AdbWrapper()
 {
@@ -71,6 +72,30 @@ QByteArray AdbWrapper::runAdb (QStringList args, bool &isError, QProcess::Proces
     proc.waitForStarted ();
     proc.waitForFinished ();
     res = proc.readAll ();
+    return res;
+}
+
+bool AdbWrapper::waitDevice ()
+{
+    bool res = true;
+    QStringList arguments;
+    arguments << "wait-for-device";
+    QProcess proc;
+    proc.start(adbPath (), arguments);
+    proc.waitForStarted ();
+    while (!proc.waitForFinished ()) {}
+
+    return res;
+}
+
+bool AdbWrapper::ping (bool & isError, QProcess::ProcessError & error)
+{
+    bool res = false;
+    QStringList arguments;
+    arguments << "get-state";
+    QString resp = runAdb (arguments, isError, error);
+    resp.remove("\r").remove("\n");
+    res = (resp == "device");
     return res;
 }
 
@@ -157,7 +182,18 @@ QString AdbWrapper::getProp (QString prop, bool &isError, QProcess::ProcessError
 QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError & error)
 {
     QString res;
-
+#if 1
+    auto version = QVersionNumber::fromString (getVersion (isError, error));
+    QString lineNumber;
+    if (QVersionNumber(6) <= version && version < QVersionNumber(9))
+        lineNumber = "13";
+    if (QVersionNumber(9) <= version && version < QVersionNumber(11))
+        lineNumber = "12";
+    if (QVersionNumber(11) <= version && version < QVersionNumber(13))
+        lineNumber = "15";
+    res = callIphonesubinfo(lineNumber, isError, error);
+    res = res.trimmed ();
+#else
     auto regPhone = QRegularExpression("(\\d){7}");
     if (checkIsCDMA (isError, error))
         regPhone = QRegularExpression("\\+(\\d){7}");
@@ -174,6 +210,7 @@ QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError
     }
     if (res.isEmpty())
         res = callIphonesubinfo("15", isError, error);
+#endif
     return res;
 }
 

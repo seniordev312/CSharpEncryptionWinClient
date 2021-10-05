@@ -68,9 +68,15 @@ private:
 
     QFutureWatcher <DeviceInfo> devInfoFutureWatcher;
 
-    QTimer * timerUpdate {nullptr};
+    //QTimer * timerUpdate {nullptr};
+
+    QTimer * timerPing {nullptr};
 
     QNetworkAccessManager* m_manager {nullptr};
+
+    void waitDevice ();
+
+    QFutureWatcher <void> devReadyFutureWatcher;
 
 private slots:
     void onDevInfoUpdated ();
@@ -80,7 +86,7 @@ private slots:
 signals:
     void sigError (QString title, QString what, QString where, QString details);
 
-    void sigDevInfo (const DeviceInfoWgt::DeviceInfo & info);
+    void sigConnected (bool isConnected);
 
 };
 

@@ -29,20 +29,64 @@ DeviceInfoWgt::DeviceInfoWgt(QWidget *parent) :
 
     //timerUpdate
     {
-        timerUpdate = new QTimer (this);
-        timerUpdate->setSingleShot (true);
-        timerUpdate->setInterval (30*1000);
-        connect (timerUpdate, &QTimer::timeout,
-                 this, [this](){
-            if (!devInfoFutureWatcher.isRunning ()) {
-                auto future = QtConcurrent::run (&DeviceInfoWgt::updateDevInfo, this);
-                devInfoFutureWatcher.setFuture (future);
-            }
-            else
-                timerUpdate->start ();
-        });
-        timerUpdate->start ();
+//        timerUpdate = new QTimer (this);
+//        timerUpdate->setSingleShot (true);
+//        timerUpdate->setInterval (30*1000);
+//        connect (timerUpdate, &QTimer::timeout,
+//                 [this](){
+//            if (!devInfoFutureWatcher.isRunning ()) {
+//                auto future = QtConcurrent::run (&DeviceInfoWgt::updateDevInfo, this);
+//                devInfoFutureWatcher.setFuture (future);
+//            }
+//            else
+//                timerUpdate->start ();
+//        });
+//        timerUpdate->start ();
     }
+
+    //timerPing
+    {
+        timerPing = new QTimer (this);
+        timerPing->setInterval (500);
+        connect (timerPing, &QTimer::timeout,
+                 [this](){
+            bool isError = false;
+            QProcess::ProcessError error;
+            bool isConnected = AdbWrapper::ping (isError, error);
+
+            changeProperty (ui->labelConnectionStatus_value, "Status", isConnected ? "success" : "fail");
+            if (isConnected) {
+                ui->labelConnectionStatus_value->setText ("CONNECTED");
+                ui->pushButtonConnectDevice->setText ("Reconnect");
+            }
+            else {
+                ui->labelConnectionStatus_value->setText ("DEVICE NOT DETECTED");
+                ui->pushButtonConnectDevice->setText ("Connect to device");
+                init ();
+                timerPing->stop ();
+            }
+
+            if (isError) {
+                emit sigError ( "Error: Adb Module",
+                                AdbWrapper::errorWhat(error),
+                                AdbWrapper::errorWhere(),
+                                AdbWrapper::errorDetails(error));
+                timerPing->stop ();
+            }
+
+            emit sigConnected (isConnected);
+        });
+    }
+
+    connect (&devReadyFutureWatcher, &QFutureWatcher<void>::finished,
+             [this](){
+                if (!devInfoFutureWatcher.isRunning ()) {
+                    auto future = QtConcurrent::run (&DeviceInfoWgt::updateDevInfo, this);
+                    devInfoFutureWatcher.setFuture (future);
+                }
+            });
+    auto future = QtConcurrent::run (&DeviceInfoWgt::waitDevice, this);
+    devReadyFutureWatcher.setFuture (future);
 }
 
 DeviceInfoWgt::Data DeviceInfoWgt::getData ()
@@ -68,7 +112,8 @@ void DeviceInfoWgt::init ()
     ui->labelSerialNumber_value->clear ();
     ui->labelDevicePhoneNumber_value->clear ();
 
-    ui->labelConnectionStatus_value->clear ();
+    changeProperty (ui->labelConnectionStatus_value, "Status", "fail");
+    ui->labelConnectionStatus_value->setText ("DEVICE NOT DETECTED");
 
     ui->pushButtonConnectDevice->setEnabled (true);
     onConnectDevice ();
@@ -91,10 +136,13 @@ void DeviceInfoWgt::onDevInfoUpdated ()
     if (newDevInfo.isConnected) {
         ui->labelConnectionStatus_value->setText ("CONNECTED");
         ui->pushButtonConnectDevice->setText ("Reconnect");
+        timerPing->start ();
     }
     else {
         ui->labelConnectionStatus_value->setText ("DEVICE NOT DETECTED");
         ui->pushButtonConnectDevice->setText ("Connect to device");
+        auto future = QtConcurrent::run (&DeviceInfoWgt::waitDevice, this);
+        devReadyFutureWatcher.setFuture (future);
     }
     ui->labelIMEI_value->setText (newDevInfo.imei);
     ui->labelManufacturer_value->setText (newDevInfo.manufacturer);
@@ -110,9 +158,9 @@ void DeviceInfoWgt::onDevInfoUpdated ()
                         AdbWrapper::errorWhat(newDevInfo.error),
                         AdbWrapper::errorWhere(),
                         AdbWrapper::errorDetails(newDevInfo.error));
-    timerUpdate->start ();
+    //timerUpdate->start ();
 
-    emit sigDevInfo (newDevInfo);
+    emit sigConnected (newDevInfo.isConnected);
 }
 
 DeviceInfoWgt::~DeviceInfoWgt ()
@@ -120,8 +168,15 @@ DeviceInfoWgt::~DeviceInfoWgt ()
     delete ui;
 }
 
+void DeviceInfoWgt::waitDevice ()
+{
+    AdbWrapper::waitDevice ();
+}
+
 DeviceInfoWgt::DeviceInfo DeviceInfoWgt::updateDevInfo ()
 {
+    timerPing->stop ();
+
     DeviceInfo res;
 
     res.isConnected = AdbWrapper::checkDevices (res.isError, res.error);

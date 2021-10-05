@@ -51,7 +51,7 @@ private slots:
 
     void onErrorHandling (QString title, QString what, QString where, QString details);
 
-    void onDevInfo (const DeviceInfoWgt::DeviceInfo & info);
+    void onConnected (bool isConnected);
 
     void onCustomerComplete (bool isComplete);
 

@@ -11,6 +11,10 @@ public:
 
     static bool checkDevices (bool & isError, QProcess::ProcessError & error);
 
+    static bool ping (bool & isError, QProcess::ProcessError & error);
+
+    static bool waitDevice ();
+
     static QString getIMEI (bool & isError, QProcess::ProcessError & error);
 
     static QString getManufacturer (bool & isError, QProcess::ProcessError & error);
