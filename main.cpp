@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    //MainView w;
     MainWgt w;
     w.show();
     return a.exec();

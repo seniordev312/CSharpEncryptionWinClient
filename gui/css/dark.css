@@ -36,6 +36,12 @@ QLabel[Status=processing]
     color: orange;
 }
 
+
+QLineEdit[Status=fail]
+{
+    color: red;
+}
+
 QLabel#labelDescription[NotLinkLS_wgt=true]
 {
     min-width: 120px;

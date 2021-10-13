@@ -2,6 +2,7 @@
 #define CUSTOMERINFOWGT_H
 
 #include <QWidget>
+
 class QNetworkAccessManager;
 
 namespace Ui {

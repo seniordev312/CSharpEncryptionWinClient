@@ -77,14 +77,14 @@ QByteArray AdbWrapper::runAdb (QStringList args, bool &isError, QProcess::Proces
 
 bool AdbWrapper::waitDevice ()
 {
-    bool res = true;
     QStringList arguments;
     arguments << "wait-for-device";
     QProcess proc;
     proc.start(adbPath (), arguments);
     proc.waitForStarted ();
-    while (!proc.waitForFinished ()) {}
-
+    bool res = proc.waitForFinished (1000);
+    proc.kill ();
+    proc.waitForFinished ();
     return res;
 }
 
@@ -182,7 +182,7 @@ QString AdbWrapper::getProp (QString prop, bool &isError, QProcess::ProcessError
 QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError & error)
 {
     QString res;
-#if 1
+#if 0
     auto version = QVersionNumber::fromString (getVersion (isError, error));
     QString lineNumber;
     if (QVersionNumber(6) <= version && version < QVersionNumber(9))
@@ -194,22 +194,11 @@ QString AdbWrapper::getDevicePhoneNumber (bool & isError, QProcess::ProcessError
     res = callIphonesubinfo(lineNumber, isError, error);
     res = res.trimmed ();
 #else
-    auto regPhone = QRegularExpression("(\\d){7}");
-    if (checkIsCDMA (isError, error))
-        regPhone = QRegularExpression("\\+(\\d){7}");
-
-    for (int i=1; i<=30; i++) {
-        res = callIphonesubinfo(QString::number(i), isError, error);
-        if (res.contains (regPhone))
-        {
-            if (!res.contains (QRegularExpression ("[A-Z]|[a-z]")))
-                break;
-        }
-        else
-            res.clear();
-    }
-    if (res.isEmpty())
-        res = callIphonesubinfo("15", isError, error);
+    auto version = QVersionNumber::fromString (getVersion (isError, error));
+    QString lineNumber = "17";
+    res = callIphonesubinfo (lineNumber, isError, error);
+    res = res.trimmed ();
+    res.remove ('+');
 #endif
     return res;
 }

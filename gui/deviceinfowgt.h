@@ -5,6 +5,8 @@
 #include <QFutureWatcher>
 #include <QProcess>
 
+#include <atomic>
+
 class QTimer;
 class QNetworkAccessManager;
 
@@ -77,6 +79,8 @@ private:
     void waitDevice ();
 
     QFutureWatcher <void> devReadyFutureWatcher;
+
+    std::atomic_bool isFinishThreads {false};
 
 private slots:
     void onDevInfoUpdated ();

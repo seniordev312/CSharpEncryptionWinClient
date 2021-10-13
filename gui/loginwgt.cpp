@@ -41,9 +41,6 @@ LoginWgt::LoginWgt(QWidget *parent) :
 
     m_manager = new QNetworkAccessManager(this);
 
-    //ui to future
-    ui->labelForgotPassword->hide ();
-
 }
 
 bool LoginWgt::eventFilter (QObject *watched, QEvent *event)

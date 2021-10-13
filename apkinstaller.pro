@@ -16,6 +16,7 @@ TARGET = apkinstaller
 INCLUDEPATH += $$PWD/inc \
 
 win32 {
+    #QMAKE_LFLAGS_WINDOWS += "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\""
     contains(QMAKE_TARGET.arch, x86_64) {
         CONFIG(debug, debug|release) {
             DESTDIR = $$PWD/bin/debug/x64

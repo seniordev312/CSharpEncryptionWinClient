@@ -313,6 +313,14 @@
                </item>
                <item>
                 <property name="text">
+                 <string>Sound Recorder</string>
+                </property>
+                <property name="checkState">
+                 <enum>Unchecked</enum>
+                </property>
+               </item>
+               <item>
+                <property name="text">
                  <string>SD Card</string>
                 </property>
                 <property name="checkState">
@@ -322,6 +330,14 @@
                <item>
                 <property name="text">
                  <string>File Manager</string>
+                </property>
+                <property name="checkState">
+                 <enum>Unchecked</enum>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>USB File Transfer </string>
                 </property>
                 <property name="checkState">
                  <enum>Unchecked</enum>

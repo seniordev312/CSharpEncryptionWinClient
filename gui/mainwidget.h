@@ -20,8 +20,9 @@ class MainWgt : public QWidget
                             installing, finished,
                             num_steps = finished};
 public:
-    explicit MainWgt(QWidget *parent = nullptr);
-    ~MainWgt();
+    explicit MainWgt (QWidget *parent = nullptr);
+
+    ~MainWgt ();
 
 private:
     Ui::MainWgt *ui;

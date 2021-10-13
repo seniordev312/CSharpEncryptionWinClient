@@ -143,6 +143,7 @@ void DeviceInfoWgt::onDevInfoUpdated ()
         ui->pushButtonConnectDevice->setText ("Connect to device");
         auto future = QtConcurrent::run (&DeviceInfoWgt::waitDevice, this);
         devReadyFutureWatcher.setFuture (future);
+        timerPing->stop ();
     }
     ui->labelIMEI_value->setText (newDevInfo.imei);
     ui->labelManufacturer_value->setText (newDevInfo.manufacturer);
@@ -165,18 +166,18 @@ void DeviceInfoWgt::onDevInfoUpdated ()
 
 DeviceInfoWgt::~DeviceInfoWgt ()
 {
+    isFinishThreads.store (true);
+    devReadyFutureWatcher.waitForFinished ();
     delete ui;
 }
 
 void DeviceInfoWgt::waitDevice ()
 {
-    AdbWrapper::waitDevice ();
+    while (!AdbWrapper::waitDevice () && !isFinishThreads.load ()) {}
 }
 
 DeviceInfoWgt::DeviceInfo DeviceInfoWgt::updateDevInfo ()
 {
-    timerPing->stop ();
-
     DeviceInfo res;
 
     res.isConnected = AdbWrapper::checkDevices (res.isError, res.error);

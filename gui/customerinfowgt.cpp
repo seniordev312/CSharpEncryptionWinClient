@@ -38,10 +38,14 @@ CustomerInfoWgt::CustomerInfoWgt(QWidget *parent) :
     onCommunityChanged ();
     onOptionalRestrictionsChanged ();
 
-    auto reg = QRegularExpression ("[0-9]*");
-    ui->lineEditBusinessPhone->setValidator (new QRegularExpressionValidator(reg, ui->lineEditBusinessPhone));
-    ui->lineEditHomePhone->setValidator (new QRegularExpressionValidator(reg, ui->lineEditHomePhone));
-    ui->lineEditStickerNumber->setValidator (new QRegularExpressionValidator(reg, ui->lineEditStickerNumber));
+    auto regBusNum = QRegularExpression ("[0-9]*");
+    ui->lineEditBusinessPhone->setValidator (new QRegularExpressionValidator(regBusNum, ui->lineEditBusinessPhone));
+
+    auto regHomeNum = QRegularExpression ("[0-9]{10,}");
+    ui->lineEditHomePhone->setValidator (new QRegularExpressionValidator(regHomeNum, ui->lineEditHomePhone));
+
+    auto regNumLet = QRegularExpression ("[0-9a-zA-Z]*");
+    ui->lineEditStickerNumber->setValidator (new QRegularExpressionValidator(regNumLet, ui->lineEditStickerNumber));
 
     connect (ui->lineEditFirstName, &QLineEdit::textChanged,
              this, &CustomerInfoWgt::onComplete);
@@ -100,10 +104,12 @@ CustomerInfoWgt::Data CustomerInfoWgt::getData ()
 
 void CustomerInfoWgt::onComplete ()
 {
+    changeProperty (ui->lineEditHomePhone, "Status", ui->lineEditHomePhone->hasAcceptableInput () ? "" : "fail");
     bool isComplete = !(ui->lineEditFirstName->text().isEmpty()
         || ui->lineEditLastName->text().isEmpty()
         || ui->lineEditHomePhone->text().isEmpty()
-        || ui->lineEditStickerNumber->text().isEmpty());
+        || ui->lineEditStickerNumber->text().isEmpty()
+        || !ui->lineEditHomePhone->hasAcceptableInput ());
     emit sigComplete (isComplete);
 
 }
