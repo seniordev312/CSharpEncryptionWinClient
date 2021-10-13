@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_5">
+  <layout class="QGridLayout" name="gridLayout_7">
    <property name="leftMargin">
     <number>30</number>
    </property>
@@ -30,7 +30,7 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
       <number>0</number>
      </property>
@@ -39,10 +39,7 @@
        <property name="title">
         <string>Customer Information</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="spacing">
-         <number>15</number>
-        </property>
+       <layout class="QGridLayout" name="gridLayout_5">
         <property name="leftMargin">
          <number>20</number>
         </property>
@@ -55,31 +52,44 @@
         <property name="bottomMargin">
          <number>20</number>
         </property>
-        <item>
-         <widget class="QLineEdit" name="lineEditFirstName">
-          <property name="placeholderText">
-           <string>First Name*</string>
-          </property>
-         </widget>
-        </item>
-        <item>
+        <property name="spacing">
+         <number>15</number>
+        </property>
+        <item row="1" column="0">
          <widget class="QLineEdit" name="lineEditLastName">
           <property name="placeholderText">
            <string>Last Name*</string>
           </property>
          </widget>
         </item>
-        <item>
+        <item row="0" column="0">
+         <widget class="QLineEdit" name="lineEditFirstName">
+          <property name="placeholderText">
+           <string>First Name*</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLineEdit" name="lineEditBusinessPhone">
+          <property name="placeholderText">
+           <string>Business Phone</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLineEdit" name="lineEditHomePhone">
           <property name="placeholderText">
            <string>Home Phone*</string>
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QLineEdit" name="lineEditBusinessPhone">
-          <property name="placeholderText">
-           <string>Business Phone</string>
+        <item row="2" column="1">
+         <widget class="QLabel" name="labelHomePhoneError">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="Status" stdset="0">
+           <string>fail</string>
           </property>
          </widget>
         </item>

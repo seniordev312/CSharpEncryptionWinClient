@@ -104,7 +104,13 @@ CustomerInfoWgt::Data CustomerInfoWgt::getData ()
 
 void CustomerInfoWgt::onComplete ()
 {
-    changeProperty (ui->lineEditHomePhone, "Status", ui->lineEditHomePhone->hasAcceptableInput () ? "" : "fail");
+    if (ui->lineEditHomePhone->hasAcceptableInput ()) {
+        changeProperty (ui->lineEditHomePhone, "Status", "");
+        ui->labelHomePhoneError->setText("");
+    } else {
+        changeProperty (ui->lineEditHomePhone, "Status", "fail");
+        ui->labelHomePhoneError->setText("Less than 10 digits");
+    }
     bool isComplete = !(ui->lineEditFirstName->text().isEmpty()
         || ui->lineEditLastName->text().isEmpty()
         || ui->lineEditHomePhone->text().isEmpty()
