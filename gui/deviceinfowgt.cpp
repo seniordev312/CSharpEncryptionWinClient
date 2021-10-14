@@ -162,6 +162,12 @@ void DeviceInfoWgt::onDevInfoUpdated ()
     //timerUpdate->start ();
 
     emit sigConnected (newDevInfo.isConnected);
+
+    if (!prevSerialNumber.isEmpty ()) {
+        if (prevSerialNumber != newDevInfo.serialNumber)
+            emit sigSerialNumberChanged ();
+    }
+    prevSerialNumber = newDevInfo.serialNumber;
 }
 
 DeviceInfoWgt::~DeviceInfoWgt ()

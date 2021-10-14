@@ -44,6 +44,13 @@ InstallingWgt::~InstallingWgt()
     delete ui;
 }
 
+void InstallingWgt::onSerialNumberChanged ()
+{
+    if (nullptr != m_worker) {
+        m_worker->cancel ();
+    }
+}
+
 void InstallingWgt::onTimeoutPB ()
 {
     auto curValue = ui->progressBarInstall->property("dbValue").toDouble ();

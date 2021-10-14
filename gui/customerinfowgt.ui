@@ -297,6 +297,9 @@
              </property>
              <item>
               <widget class="QListWidget" name="listWidgetOptionalRestrictions">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <item>
                 <property name="text">
                  <string>Camera</string>
@@ -546,6 +549,9 @@
    </item>
    <item row="1" column="0">
     <widget class="QCheckBox" name="checkBoxBatchInstallMode">
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string>Batch Install Mode</string>
      </property>
@@ -566,6 +572,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEditFirstName</tabstop>
+  <tabstop>lineEditLastName</tabstop>
+  <tabstop>lineEditHomePhone</tabstop>
+  <tabstop>lineEditBusinessPhone</tabstop>
+  <tabstop>comboBoxCommunity</tabstop>
+  <tabstop>comboBoxFilterLevel</tabstop>
+  <tabstop>comboBoxOptionalRestrictions</tabstop>
+  <tabstop>comboBoxParentalBlock</tabstop>
+  <tabstop>lineEditStickerNumber</tabstop>
+  <tabstop>lineEditParentalPhoneNumber</tabstop>
+  <tabstop>lineEditParentalCode</tabstop>
+  <tabstop>listWidgetOptionalRestrictions</tabstop>
+  <tabstop>checkBoxBatchInstallMode</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

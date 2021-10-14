@@ -53,6 +53,10 @@ MainWgt::MainWgt(QWidget *parent) :
                  this, &MainWgt::onErrorHandling);
         connect (ui->deviceInfo, &DeviceInfoWgt::sigConnected,
                  this, &MainWgt::onConnected);
+        connect (ui->deviceInfo, &DeviceInfoWgt::sigSerialNumberChanged,
+                 this, &MainWgt::onSerialNumberChanged);
+        connect (ui->deviceInfo, &DeviceInfoWgt::sigSerialNumberChanged,
+                 ui->installing, &InstallingWgt::onSerialNumberChanged);
     }
 
     //customer info
@@ -65,6 +69,8 @@ MainWgt::MainWgt(QWidget *parent) :
 
     //bottom widget
     {
+        connect (ui->pushButtonBack, &QPushButton::clicked,
+                 this, &MainWgt::onBack);
         connect (ui->pushButtonLogout, &QPushButton::clicked,
                  this, &MainWgt::onLogout);
         connect (ui->pushButtonNext, &QPushButton::clicked,
@@ -80,6 +86,25 @@ MainWgt::MainWgt(QWidget *parent) :
     changeDeviceDetected (false);
     goToNextStep ();
     ui->pushButtonNext->setEnabled (false);
+}
+
+void MainWgt::onBack ()
+{
+    if (SignUpSteps::login_signup == curStep) {
+        qCritical () << "can not go to next step, first step";
+        return;
+    }
+    if (SignUpSteps::finished == curStep)
+        curStep = SignUpSteps::customerInfo;
+    else
+        curStep = static_cast<SignUpSteps> (static_cast<int> (curStep) - 1);
+    goToCurStep ();
+}
+
+void MainWgt::onSerialNumberChanged ()
+{
+    curStep = SignUpSteps::deviceInfo;
+    goToCurStep ();
 }
 
 void MainWgt::onCustomerComplete (bool isComplete)
@@ -292,6 +317,7 @@ void MainWgt::goToCurStep ()
     ui->pushButtonStartNew->hide ();
     ui->pushButtonLogout->setEnabled (true);
     ui->pushButtonStart->setEnabled (true);
+    ui->pushButtonBack->setEnabled (true);
 
     if(curStep == SignUpSteps::login_signup) {
         ui->labelStatus->setText ("Not logged in");
@@ -299,6 +325,7 @@ void MainWgt::goToCurStep ()
         ui->loginSignUp->clear ();
         ui->pushButtonLogout->hide ();
         ui->pushButtonStart->hide ();
+        ui->pushButtonBack->setEnabled (false);
     }
     else if(curStep == SignUpSteps::deviceInfo) {
         ui->stackedWidgetWorkArea->setCurrentWidget (ui->deviceInfo);

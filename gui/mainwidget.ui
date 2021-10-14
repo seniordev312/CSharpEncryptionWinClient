@@ -236,9 +236,9 @@
        <number>30</number>
       </property>
       <item>
-       <widget class="QPushButton" name="pushButtonLogout">
+       <widget class="QPushButton" name="pushButtonBack">
         <property name="text">
-         <string>Logout</string>
+         <string>Back</string>
         </property>
        </widget>
       </item>
@@ -268,6 +268,13 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonLogout">
+        <property name="text">
+         <string>Logout</string>
         </property>
        </widget>
       </item>

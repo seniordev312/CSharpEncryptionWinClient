@@ -29,6 +29,9 @@ public:
 
     void setIdDevice (QString idDevice);
 
+public slots:
+    void onSerialNumberChanged ();
+
 private:
     Ui::InstallingWgt *ui;
 

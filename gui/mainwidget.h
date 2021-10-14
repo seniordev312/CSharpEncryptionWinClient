@@ -42,6 +42,8 @@ private slots:
 
     void onLogout ();
 
+    void onBack ();
+
     void onStart ();
 
     void onStartNew ();
@@ -55,6 +57,8 @@ private slots:
     void onConnected (bool isConnected);
 
     void onCustomerComplete (bool isComplete);
+
+    void onSerialNumberChanged ();
 
 };
 

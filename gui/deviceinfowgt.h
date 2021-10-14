@@ -82,6 +82,8 @@ private:
 
     std::atomic_bool isFinishThreads {false};
 
+    QString prevSerialNumber;
+
 private slots:
     void onDevInfoUpdated ();
 
@@ -91,6 +93,8 @@ signals:
     void sigError (QString title, QString what, QString where, QString details);
 
     void sigConnected (bool isConnected);
+
+    void sigSerialNumberChanged ();
 
 };
 
