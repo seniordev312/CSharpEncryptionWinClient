@@ -27,18 +27,20 @@ void InstallFilesGenerator::createFilesContents ()
     auto passcodeAdb = QCryptographicHash::hash (passcodeWeb,
                                                  QCryptographicHash::Sha512).toHex ();
 
+    auto challenge = generateChallenge ();
     fileWebContents[PasscodeFile]  = {passcodeWeb};
-    fileWebContents[ChallengeFile] = {generateChallenge ()};
+    fileWebContents[ChallengeFile] = {challenge};
 
     fileAdbContents[AesKeyFile]    = {"aes.key", ""};
-    fileAdbContents[AesKeyFile]    = {"aes.key", ""};
+    fileAdbContents[PasscodeAdbFile]  = {"codes.txt", passcodeAdb};
+    fileAdbContents[ChallengeAdbFile] = {"2560.txt", challenge};
     fileAdbContents[IdFile]        = {"id.txt", ""};
 }
 
 //to web posts
 bool InstallFilesGenerator::generateAES_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge)
 {
-    createFilesContents ();
+    //createFilesContents ();
     AesEncryption encryption;
     bool ok = true;
     aesKey = generateAES256Key();
@@ -99,6 +101,8 @@ QByteArray InstallFilesGenerator::generateChallenge ()
 
 bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStringList &outList)
 {
+    //test
+    createFilesContents ();
     QByteArray aes256Key = generateAES256Key();
     QByteArray iv = generateIV();
     iv.append(aes256Key);
@@ -124,7 +128,7 @@ bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStrin
             if (IdFile ==index)
                 continue;
             QString baseFileName =QString("file_%1").arg(fileAdbContents[index].name);
-            QString sourceFile = QString("%1/%2.txt").arg(m_folder, baseFileName);
+            QString sourceFile = QString("%1/%2").arg(m_folder, baseFileName);
             generateFile(sourceFile, index);
             //encode file
             QString encodedFile = QString("%1/%2.encoded").arg(m_folder, baseFileName);

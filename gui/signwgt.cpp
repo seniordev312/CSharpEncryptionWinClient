@@ -174,11 +174,13 @@ void SignWgt::onSend ()
     QJsonObject obj;
     obj["code"] = ui->lineEditInvitationCode->text ();
     QJsonDocument doc (obj);
-
+    qDebug () << doc.toJson ();
     QJsonObject objEncrypted;
-    objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()));
+    auto encryptData = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()).toBase64 ());
+    qDebug () << encryptData;
+    objEncrypted["Load"] = encryptData;
     QJsonDocument docEnctypted (objEncrypted);
-
+    qDebug () << docEnctypted.toJson ();
     const QUrl url (defWebAppEndpoint);
     QNetworkRequest request (url);
     request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
