@@ -75,16 +75,38 @@ void LoginWgt::checkConditionsLogin ()
 void LoginWgt::onLogin ()
 {
 #if 1
-    QSettings settings;
-    auto storedEmail = settings.value (defAppUserName).toString ();
-    auto storedPassword = settings.value (defAppPassword).toString ();
-    if (ui->lineEditUsername->text () == storedEmail &&
-        ui->lineEditPassword->text () == storedPassword)
-        emit sigSuccess ();
-    else {
-        changeProperty (ui->labelLoginStatus, "Status", "fail");
-        ui->labelLoginStatus->setText ("Credentionals are not valid");
-    }
+    auto newEmail = ui->lineEditUsername->text ();
+    auto newPassword = ui->lineEditPassword->text ();
+    auto newHashPassw = QCryptographicHash::hash (newPassword.toUtf8(),
+                                                  QCryptographicHash::Sha256).toHex ();
+    Credentionals::instance().setData (newEmail, newHashPassw);
+    const QUrl url (defWebAppEndpoint);
+    QNetworkRequest request (url);
+    request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader ("Type", "3");
+    request.setRawHeader ("Auth", Credentionals::instance ().authHeader ());
+
+    QNetworkReply* reply = m_manager->post (request, "");
+
+    connect(reply, &QNetworkReply::finished, this, [=](){
+        if(reply->error() == QNetworkReply::NoError){
+            auto resp = reply->readAll ();
+            auto doc = QJsonDocument::fromJson (resp);
+            auto obj = doc.object ();
+            QString fN = obj ["FName"].toString ();
+            QString lN = obj ["LName"].toString ();
+            emit sigSuccess (fN + " " + lN);
+
+        }else{
+            auto resp = reply->readAll ();
+            emit sigError       ( "Error: WebApp",
+                                "Webapp error: error occured during checking invitation in WebApp",
+                                "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                "section to get more detailed information about the error.",
+                                reply->errorString() + resp);
+        }
+        reply->deleteLater();
+    });
 
 #else
     auto email = ui->lineEditUsername->text ();

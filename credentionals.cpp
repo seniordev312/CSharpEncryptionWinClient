@@ -1,8 +1,11 @@
 #include "credentionals.h"
 
 #include <QSettings>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include "settingkeys.h"
+#include "gui/utils.h"
 
 Credentionals& Credentionals::instance ()
 {
@@ -10,40 +13,26 @@ Credentionals& Credentionals::instance ()
     return singleton;
 }
 
-void Credentionals::setData (QString userName, QString name, QString password)
+void Credentionals::setData (QString userName, QString hashPassword, QString name)
 {
     m_rsaEncryption.generate ();
 
-    auto userName_ = m_rsaEncryption.encryptPub ( userName.toUtf8 ());
-    auto name_ = m_rsaEncryption.encryptPub (name.toUtf8 ());
-    auto password_ = m_rsaEncryption.encryptPub (password.toUtf8 ());
-
     QSettings settings;
-    settings.setValue (defAppUserName, userName_);
-    settings.setValue (defAppPassword, password_);
-    settings.setValue (defAppName, name_);
+
+    //before encryption
+    QJsonObject objAuth;
+    objAuth["username"] = userName;
+    objAuth["password"] = hashPassword;
+    QJsonDocument docAuth (objAuth);
+
+    auto authData = RsaEncryption::encryptData (defWebAppPublicKey, docAuth.toJson ());
+
+    settings.setValue (defAuth, authData);
 }
 
-QString Credentionals::data (QString settingsKey)
+QByteArray Credentionals::authHeader ()
 {
-    QString res;
     QSettings settings;
-    QByteArray ba = settings.value (settingsKey).toByteArray ();
-    res = m_rsaEncryption.decryptPri (ba);
-    return res;
+    return settings.value (defAuth).toByteArray ();
 }
 
-QString Credentionals::userName ()
-{
-    return data (defAppUserName);
-}
-
-QString Credentionals::name ()
-{
-    return data (defAppName);
-}
-
-QString Credentionals::password ()
-{
-    return data (defAppPassword);
-}

@@ -46,7 +46,7 @@ private slots:
 signals:
     void sigLogin ();
 
-    void sigSuccess ();
+    void sigSuccess (QString name);
 
     void sigError (QString title, QString what, QString where, QString details);
 };

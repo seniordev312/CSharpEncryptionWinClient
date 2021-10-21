@@ -51,6 +51,7 @@ HEADERS += \
     aesencryption.h \
     apkinstallworker.h \
     credentionals.h \
+    gui/SequryLineEdit.h \
     gui/customerinfowgt.h \
     gui/deviceinfowgt.h \
     gui/errorhandlingdlg.h \
@@ -105,4 +106,4 @@ FORMS += \
 RESOURCES += \
     res.qrc
 
-#DEFINES += WEBAPI
+DEFINES += WEBAPI

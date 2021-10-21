@@ -8,6 +8,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
+#include <QRegularExpression>
+#include <QMessageBox>
 
 #include "utils.h"
 #include "settingkeys.h"
@@ -130,7 +132,7 @@ void SignWgt::onSignUp ()
 
         connect(reply, &QNetworkReply::finished, this, [=](){
             if(reply->error() != QNetworkReply::NoError){
-                emit sigError   ("Error: WebApp",
+                emit sigError   ("Error setting password for user " + ui->lineEditUsername->text (),
                                 "Webapp error: error occured during sending post to WebApp",
                                 "An error occured during sending requests to WebApp. See \"Details\"\n"
                                 "section to get more detailed information about the error.",
@@ -142,7 +144,7 @@ void SignWgt::onSignUp ()
                     Credentionals::instance ().setData (email, name, hashPassw);
                 }
 
-                emit sigSuccess ();
+                emit sigSuccess (ui->lineEditName->text ());
             }
             reply->deleteLater();
         });
@@ -202,6 +204,7 @@ void SignWgt::onSend ()
             }
 
             onlyInviationView (obj["Valid"].toBool());
+            QMessageBox::information (this, "Success", "Password Successfully Set");
         }else{
             auto resp = reply->readAll ();
             emit sigError   ("Error: WebApp",
@@ -209,6 +212,7 @@ void SignWgt::onSend ()
                             "An error occured during sending requests to WebApp. See \"Details\"\n"
                             "section to get more detailed information about the error.",
                             reply->errorString() + resp);
+            onlyInviationView (false);
         }
         reply->deleteLater();
     });
@@ -217,22 +221,42 @@ void SignWgt::onSend ()
 
 void SignWgt::checkConditionsSignUp ()
 {
-    bool cahSignUp = true;
+    bool canSignUp = true;
 
     changeProperty (ui->labelRePasswordStatus, "Status", "");
     ui->labelRePasswordStatus->clear ();
+    changeProperty (ui->labelPasswordStatus, "Status", "");
+    ui->labelPasswordStatus->clear ();
+
+    auto password = ui->lineEditPassword->text();
+
+    bool containsChar = false;
+    for (int i=0; i<password.size (); i++) {
+        if (password.at (i).isLetter ())
+            containsChar = true;
+    }
 
     if (!ui->checkBoxTermsPrivacy->isChecked ())
-        cahSignUp = false;
-    if (ui->lineEditPassword->text().isEmpty())
-        cahSignUp = false;
-    if (ui->lineEditPassword->text() != ui->lineEditRetypePassword->text()) {
-        cahSignUp = false;
+        canSignUp = false;
+    else if (password.length() < 7) {
+        canSignUp = false;
+        changeProperty (ui->labelPasswordStatus, "Status", "fail");
+        ui->labelPasswordStatus->setText ("Less than 7 symbols");
+    }
+    else if (!password.contains (QRegularExpression ("[0-9]"))
+             || !password.contains (QRegularExpression ("!@#$%^&()*"))
+             || !containsChar) {
+        canSignUp = false;
+        changeProperty (ui->labelPasswordStatus, "Status", "fail");
+        ui->labelPasswordStatus->setText ("Must contain alphanumeric, upper and lower casing, special characters");
+    }
+    else if (ui->lineEditPassword->text() != ui->lineEditRetypePassword->text()) {
+        canSignUp = false;
         changeProperty (ui->labelRePasswordStatus, "Status", "fail");
         ui->labelRePasswordStatus->setText ("Password not the same");
     }
 
-    ui->pushButtonSignUp->setEnabled (cahSignUp);
+    ui->pushButtonSignUp->setEnabled (canSignUp);
 }
 
 void SignWgt::onlyInviationView (bool activated, bool init)
@@ -243,13 +267,13 @@ void SignWgt::onlyInviationView (bool activated, bool init)
 
     if (activated) {
         changeProperty (ui->labelStatusInvitationCode, "Status", "success");
-        ui->labelStatusInvitationCode->setText ("Invation accepted");
+        ui->labelStatusInvitationCode->setText ("");
 
     }
     else {
         if (!init) {
             changeProperty (ui->labelStatusInvitationCode, "Status", "fail");
-            ui->labelStatusInvitationCode->setText("Invation declined");
+            ui->labelStatusInvitationCode->setText("Invalid or Expired Code");
         }
         else
             ui->labelStatusInvitationCode->clear ();

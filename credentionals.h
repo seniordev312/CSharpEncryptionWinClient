@@ -6,24 +6,18 @@
 class Credentionals
 {
 public:
-    static Credentionals& instance();
+    static Credentionals& instance ();
 
-    void setData (QString userName, QString name, QString password);
+    void setData (QString userName, QString hashPassword, QString name = "");
 
-    QString userName ();
-
-    QString name ();
-
-    QString password ();
+    QByteArray authHeader ();
 
 private:
-    Credentionals() = default;
+    Credentionals () = default;
 
-    ~Credentionals() = default;
+    ~Credentionals () = default;
 
     RsaEncryption m_rsaEncryption;
-
-    QString data (QString settingsKey);
 
 };
 

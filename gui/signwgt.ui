@@ -379,7 +379,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QLineEdit" name="lineEditPassword">
+       <widget class="SequryLineEdit" name="lineEditPassword">
         <property name="Short" stdset="0">
          <bool>true</bool>
         </property>
@@ -502,7 +502,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QLineEdit" name="lineEditRetypePassword">
+       <widget class="SequryLineEdit" name="lineEditRetypePassword">
         <property name="Short" stdset="0">
          <bool>true</bool>
         </property>
@@ -562,8 +562,22 @@
      </property>
     </widget>
    </item>
+   <item row="4" column="3">
+    <widget class="QLabel" name="labelPasswordStatus">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SequryLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>SequryLineEdit.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>lineEditInvitationCode</tabstop>
   <tabstop>lineEditName</tabstop>

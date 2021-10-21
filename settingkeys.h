@@ -1,8 +1,6 @@
 #ifndef SETTINGKEYS_H
 #define SETTINGKEYS_H
 
-#define defAppUserName      "UserNameApp"
-#define defAppPassword      "PasswordApp"
-#define defAppName          "NameApp"
+#define defAuth     "auth"
 
 #endif // SETTINGKEYS_H

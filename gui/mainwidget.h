@@ -38,7 +38,7 @@ private:
 private slots:
     void goToNextStep ();
 
-    void onLoginSignUp ();
+    void onLoginSignUp (QString name);
 
     void onLogout ();
 

@@ -223,21 +223,8 @@ void MainWgt::onStart ()
     QNetworkRequest request (url);
     request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader ("Type", "3");
-    //authenication
-    {
-        QString username    = Credentionals::instance ().userName ();
-        QString hashPassw   = Credentionals::instance ().password ();
+    request.setRawHeader ("Auth", Credentionals::instance ().authHeader ());
 
-        //before encryption
-        QJsonObject objAuth;
-        objAuth["username"] = username;
-        objAuth["password"] = hashPassw;
-        QJsonDocument docAuth (objAuth);
-
-        auto authData = RsaEncryption::encryptData (defWebAppPublicKey, docAuth.toJson ());
-
-        request.setRawHeader ("Auth", authData);
-    }
     QNetworkReply* reply = m_manager->post (request, doc.toJson ());
 
     connect(reply, &QNetworkReply::finished, this, [=](){
@@ -273,17 +260,9 @@ void MainWgt::onStartNew ()
     goToCurStep ();
 }
 
-void MainWgt::onLoginSignUp ()
+void MainWgt::onLoginSignUp (QString name)
 {
-    {
-#if 1
-        QSettings settings;
-        auto name = settings.value (defAppName).toString ();
-#else
-        auto name = Credentionals::instance().userName();
-#endif
-        ui->labelStatus->setText ("Logged in as : " + name);
-    }
+    ui->labelStatus->setText ("Logged in as : " + name);
     goToNextStep ();
 }
 
