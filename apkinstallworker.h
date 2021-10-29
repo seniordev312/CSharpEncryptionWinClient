@@ -18,6 +18,7 @@ public:
                      , QString id);
 
     enum InstallStates { ClearDeviceFolderState
+         , StartApk1
          , WaitPublicKeyStateApk1
          , ReceivePublicKeyStateApk1
          , LoadPublicKeyStateApk1
@@ -45,7 +46,7 @@ private:
     void reEncryptApk ();
     void doWaitPublicKeyApk1();
     bool doPushApk();
-    bool doRunApk();
+    bool doRunApk (QString packageName);
     void doWaitPublicKey (const QString & pubKey);
     void doReceivePublicKey (const QString & pubKey);
     void doLoadPublicKey (const QString & pubKey);

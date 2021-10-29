@@ -8,6 +8,7 @@
 #include "adbwrapper.h"
 #include "aesencryption.h"
 #include "installfilesgenerator.h"
+#include "gui/utils.h"
 
 ApkInstallWorker::ApkInstallWorker(QByteArray apkFileData
                                      , QByteArray keyDecrypted
@@ -69,7 +70,22 @@ void ApkInstallWorker::run()
                             AdbWrapper::errorDetails(error) + "\n" + m_lastError);
             }
             else
-                m_state = InstallStates::WaitPublicKeyStateApk1;
+                m_state = InstallStates::StartApk1;
+        }
+            break;
+        case StartApk1:
+        {
+            bool ok = doRunApk (defApk1Package);
+            QString msg = ok?"[OK] Run APK":"[FAILED] Run APK";
+
+            if(ok){
+                m_state = static_cast <InstallStates> (m_state + 1);
+            }else{
+                m_state = InstallStates::CompleteState;
+                m_lastError = "Failed to run apk";
+            }
+
+            emit message(msg);
         }
             break;
         case WaitPublicKeyStateApk1:
@@ -215,14 +231,14 @@ bool ApkInstallWorker::doPushApk()
     return ok;
 }
 
-bool ApkInstallWorker::doRunApk()
+bool ApkInstallWorker::doRunApk(QString packageName)
 {
     emit message(QString("Run apk..."));
     AdbWrapper adb;
     QString ret;
     bool isError {false};
     QProcess::ProcessError error {QProcess::UnknownError};
-    bool ok = adb.runApk(m_packageName, ret, isError, error);
+    bool ok = adb.runApk(packageName, ret, isError, error);
     emit message(ret);
     if (isError) {
         ok = false;
