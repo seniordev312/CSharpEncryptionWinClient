@@ -97,14 +97,14 @@ void SignWgt::clear ()
 void SignWgt::onSignUp ()
 {
 #ifndef WEBAPI
-    QSettings settings;
+    /*QSettings settings;
     auto email = ui->lineEditUsername->text ();
     settings.setValue (defAppUserName, email);
     auto password = ui->lineEditPassword->text ();
     settings.setValue (defAppPassword, password);
     auto name = ui->lineEditName->text ();
-    settings.setValue (defAppName, name);
-    emit sigSuccess ();
+    settings.setValue (defAppName, name);*/
+    emit sigSuccess (ui->lineEditName->text ());
 #else
     auto email = ui->lineEditUsername->text ();
     auto password = ui->lineEditPassword->text ();
@@ -121,7 +121,7 @@ void SignWgt::onSignUp ()
         QJsonDocument doc(obj);
 
         QJsonObject objEncrypted;
-        objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()));
+        objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson (), RSA_PKCS1_PADDING));
         QJsonDocument docEnctypted (objEncrypted);
 
         const QUrl url(defWebAppEndpoint);
@@ -176,13 +176,11 @@ void SignWgt::onSend ()
     QJsonObject obj;
     obj["code"] = ui->lineEditInvitationCode->text ();
     QJsonDocument doc (obj);
-    qDebug () << doc.toJson ();
     QJsonObject objEncrypted;
-    auto encryptData = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson ()).toBase64 ());
-    qDebug () << encryptData;
-    objEncrypted["Load"] = encryptData;
+    objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey,
+                                                                doc.toJson (QJsonDocument::Compact),
+                                                                RSA_PKCS1_PADDING).toBase64 ());
     QJsonDocument docEnctypted (objEncrypted);
-    qDebug () << docEnctypted.toJson ();
     const QUrl url (defWebAppEndpoint);
     QNetworkRequest request (url);
     request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");

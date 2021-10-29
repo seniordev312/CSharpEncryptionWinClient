@@ -21,12 +21,16 @@ public:
 
     static void createFilesContents ();
 
-    static bool generateAES_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge); //to web posts
+    static bool generateAESPassChallenge_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge); //to web posts
 
     bool generate (QByteArray rsaPulicKey, QString id, QStringList& outList);
 
+    static bool generateApk2 (QByteArray rsaPulicKey, QByteArray apkCode, QString & apkFilePath, QString & keyFilePath);
+
 private:
-    void generateFile (const QString &fullPath, int index);
+    static bool encodeAES (QByteArray & aesKey, QByteArray & iv, QByteArray &src);
+
+    static void generateFile (const QString &fullPath, int index);
 
     static QByteArray generatePasscode ();
 
@@ -37,6 +41,8 @@ private:
     static QByteArray generateAES256Key ();
 
     static QByteArray generateIV ();
+
+    static bool generateAES256File (QByteArray rsaPulicKey, QString folder, QStringList& outList, QByteArray & aes256Key, QByteArray & iv);
 
     static QList <QByteArray> fileWebContents; // <fileContent>
 

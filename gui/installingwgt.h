@@ -55,7 +55,7 @@ private:
 
     void writeLog(const QString& msg);
 
-    void installApkOnDevice ();
+    void installApkOnDevice (const QByteArray & apkData, const QByteArray & key);
 
     void onStartWorker();
 

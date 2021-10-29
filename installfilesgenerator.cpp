@@ -38,7 +38,7 @@ void InstallFilesGenerator::createFilesContents ()
 }
 
 //to web posts
-bool InstallFilesGenerator::generateAES_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge)
+bool InstallFilesGenerator::generateAESPassChallenge_en (QByteArray & aesKey, QByteArray & iv, QString &passcode, QString &challenge)
 {
     //createFilesContents ();
     AesEncryption encryption;
@@ -58,7 +58,22 @@ bool InstallFilesGenerator::generateAES_en (QByteArray & aesKey, QByteArray & iv
             challenge = buffEncrypted.buffer();
     }
 
+    return ok;
+}
 
+bool InstallFilesGenerator::encodeAES (QByteArray & aesKey, QByteArray & iv, QByteArray &src)
+{
+    AesEncryption encryption;
+    bool ok = true;
+    aesKey = generateAES256Key();
+    iv = generateIV();
+
+    QBuffer buffSource;
+    buffSource.setBuffer (&src);
+    QBuffer buffEncrypted;
+    ok = encryption.encryptIODevice (&buffSource, &buffEncrypted, aesKey, iv);
+    if (ok)
+        src = buffEncrypted.buffer();
 
     return ok;
 }
@@ -103,22 +118,10 @@ bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStrin
 {
     //test
     createFilesContents ();
-    QByteArray aes256Key = generateAES256Key();
-    QByteArray iv = generateIV();
-    iv.append(aes256Key);
 
-    //Encrypt key
-    QByteArray encryptedAes256Key = RsaEncryption::encryptData(rsaPulicKey, iv);
-
-    //Save to file
-    QString aesFilePath = QString("%1/aes.key").arg(m_folder);
-    QFile aesFile(aesFilePath);
-    bool ok = aesFile.open(QIODevice::WriteOnly);
-    if(ok){
-        aesFile.write(encryptedAes256Key);
-        aesFile.close();
-        outList.append(aesFilePath);
-    }
+    QByteArray aes256Key;
+    QByteArray iv;
+    bool ok = generateAES256File (rsaPulicKey, m_folder, outList, aes256Key, iv);
 
     if(ok)
     {
@@ -137,6 +140,59 @@ bool InstallFilesGenerator::generate(QByteArray rsaPulicKey, QString id,  QStrin
             outList.append(encodedFile);
             if(!ok){break;}
         }
+    }
+
+    return ok;
+}
+
+bool InstallFilesGenerator::generateAES256File (QByteArray rsaPulicKey, QString folder, QStringList& outList, QByteArray & aes256Key, QByteArray & iv)
+{
+    aes256Key = generateAES256Key();
+    iv = generateIV();
+    iv.append(aes256Key);
+
+    //Encrypt key
+    QByteArray encryptedAes256Key = RsaEncryption::encryptData(rsaPulicKey, iv);
+
+    //Save to file
+    QString aesFilePath = QString("%1/aes.key").arg(folder);
+    QFile aesFile(aesFilePath);
+    bool ok = aesFile.open(QIODevice::WriteOnly);
+    if(ok){
+        aesFile.write(encryptedAes256Key);
+        aesFile.close();
+        outList.append(aesFilePath);
+    }
+
+    return ok;
+}
+
+bool InstallFilesGenerator::generateApk2 (QByteArray rsaPulicKey, QByteArray apkCode, QString & apkFilePath, QString & keyFilePath)
+{
+    QString folder = defDeviceFoder;
+
+    QByteArray aes256Key;
+    QByteArray iv;
+    QStringList outList;
+    bool ok = generateAES256File (rsaPulicKey, folder, outList, aes256Key, iv);
+    keyFilePath = outList.first();
+
+    if(ok)
+    {
+        AesEncryption encryption;
+
+        QString baseFileName =QString("app-release.apk");
+        QString sourceFile = QString("%1/%2").arg(folder, baseFileName);
+        QFile file(sourceFile);
+        if(file.open(QIODevice::ReadWrite)){
+            QString data =apkCode;
+            file.write(data.toLatin1());
+            file.close();
+        }
+        //encode file
+        apkFilePath = QString("%1/%2.encoded").arg(folder, baseFileName);
+        ok = (encryption.encrypt(sourceFile,apkFilePath, aes256Key, iv) == 0);
+        QFile::remove(sourceFile);
     }
 
     return ok;

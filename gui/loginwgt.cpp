@@ -74,7 +74,9 @@ void LoginWgt::checkConditionsLogin ()
 
 void LoginWgt::onLogin ()
 {
-#if 1
+#ifndef WEBAPI
+    emit sigSuccess ("name");
+#else
     auto newEmail = ui->lineEditUsername->text ();
     auto newPassword = ui->lineEditPassword->text ();
     auto newHashPassw = QCryptographicHash::hash (newPassword.toUtf8(),
@@ -83,10 +85,10 @@ void LoginWgt::onLogin ()
     const QUrl url (defWebAppEndpoint);
     QNetworkRequest request (url);
     request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader ("Type", "3");
+    request.setRawHeader ("Type", "4");
     request.setRawHeader ("Auth", Credentionals::instance ().authHeader ());
 
-    QNetworkReply* reply = m_manager->post (request, "");
+    QNetworkReply* reply = m_manager->post (request, QByteArray());
 
     connect(reply, &QNetworkReply::finished, this, [=](){
         if(reply->error() == QNetworkReply::NoError){
@@ -107,60 +109,6 @@ void LoginWgt::onLogin ()
         }
         reply->deleteLater();
     });
-
-#else
-    auto email = ui->lineEditUsername->text ();
-    auto password = ui->lineEditPassword->text ();
-    auto hashPassw = QString::fromStdString (QCryptographicHash::hash(password.toUtf8(),
-                              QCryptographicHash::Sha256).toHex().toStdString ());
-
-    //send to WebApp
-    {
-        QJsonObject obj;
-        obj["UserEmail"]    = email;
-        obj["Password"]     = hashPassw;
-        QJsonDocument doc(obj);
-
-        QString endpoint = defEndpoint;
-        const QUrl url(endpoint+"/login");
-        QNetworkRequest request(url);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply* reply = m_manager->post (request, doc.toJson ());
-
-        connect(reply, &QNetworkReply::finished, this, [=](){
-            if(reply->error() != QNetworkReply::NoError){
-                emit sigError   ("Error: WebApp",
-                                "Webapp error: error occured during sending post to WebApp",
-                                "An error occured during sending requests to WebApp. See \"Details\"\n"
-                                "section to get more detailed information about the error.",
-                                reply->errorString());
-            }
-            else {
-                QJsonParseError error;
-                auto resp = QString (reply->readAll ());
-                QJsonDocument doc = QJsonDocument::fromJson(resp.toUtf8(), &error);
-                if (doc.isNull ()) {
-                    emit sigError   ("Error: WebApp",
-                                    "Webapp error: error occured during parsing reply from WebApp",
-                                    "An error occured during sending requests to WebApp. See \"Details\"\n"
-                                    "section to get more detailed information about the error.",
-                                    error.errorString());
-                    return;
-                }
-                auto obj = doc.object ();
-                if ("0" == obj["Res"].toString ()) {
-                    changeProperty (ui->labelLoginStatus, "Status", "fail");
-                    ui->labelLoginStatus->setText ("Credentionals are not valid");
-                }
-                else {
-                    auto name = obj["Name"].toString ();
-                    Credentionals::instance ().setData (email, name, hashPassw);
-                    emit sigSuccess ();
-                }
-            }
-            reply->deleteLater();
-        });
-    }
 #endif
 }
 

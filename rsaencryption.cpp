@@ -1,7 +1,6 @@
 #include "rsaencryption.h"
 #include <QDebug>
 
-#include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
 
@@ -217,7 +216,7 @@ QByteArray RsaEncryption::encryptPub(const QByteArray& data)
     return result;
 }
 
-QByteArray RsaEncryption::encryptData(const QByteArray &key, const QByteArray &data)
+QByteArray RsaEncryption::encryptData(const QByteArray &key, const QByteArray &data, int paddingType)
 {
     if(data.isEmpty()){
         return QByteArray();
@@ -237,7 +236,7 @@ QByteArray RsaEncryption::encryptData(const QByteArray &key, const QByteArray &d
                                     , (unsigned char*)data.data()
                                     , encBuffer
                                     , rsa
-                                    , RSA_PKCS1_OAEP_PADDING);
+                                    , paddingType);
 
     qInfo()<<"crtLen:"<<crtLen;
 
@@ -264,7 +263,7 @@ QByteArray RsaEncryption::encryptData(const QByteArray &key, const QByteArray &d
                                            , (unsigned char*)data.data() + i*rsaLen
                                            , encryptedBin
                                            , rsa
-                                           , RSA_PKCS1_OAEP_PADDING);
+                                           , paddingType);
         if(resultLen == -1){
             qInfo()<<"ERROR: RSA_public_encrypt"<<ERR_error_string(ERR_get_error(), NULL);
             break;

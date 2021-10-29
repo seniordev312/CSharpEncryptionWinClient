@@ -8,16 +8,22 @@ class ApkInstallWorker : public QObject, public QRunnable
     Q_OBJECT
 public:
 
-    ApkInstallWorker(QString apkFilePath
+    ApkInstallWorker(QByteArray apkFileData
+                     , QByteArray keyDecrypted
                      , QString packageName
                      , QString deviceFolder
                      , QString publicKeyFileName
+                     , QString publicKeyFileNameApk1
                      , QString localFolder
                      , QString id);
 
     enum InstallStates { ClearDeviceFolderState
+         , WaitPublicKeyStateApk1
+         , ReceivePublicKeyStateApk1
+         , LoadPublicKeyStateApk1
+         , ReEncryptApk2
          , PushApkState
-         , RunApkState
+         //, RunApkState
          , WaitPublicKeyState
          , ReceivePublicKeyState
          , LoadPublicKeyState
@@ -36,11 +42,13 @@ signals:
     void message(QString msg);
     void sigError (QString title, QString what, QString where, QString details);
 private:
+    void reEncryptApk ();
+    void doWaitPublicKeyApk1();
     bool doPushApk();
     bool doRunApk();
-    void doWaitPublicKey();
-    void doReceivePublicKey();
-    void doLoadPublicKey();
+    void doWaitPublicKey (const QString & pubKey);
+    void doReceivePublicKey (const QString & pubKey);
+    void doLoadPublicKey (const QString & pubKey);
     void doGenerateInstallFiles();
     void doPushInstallFiles();
     void clearLocalFolder();
@@ -48,8 +56,10 @@ private:
     QMutex m_cancelMutex;
     QString m_deviceFolder;
     QString m_publicKeyFileName;
+    QString m_publicKeyFileNameApk1;
     QString m_packageName;
-    QString m_apkFilePath;
+    QByteArray m_apkFileData;
+    QByteArray m_keyDecrypted;
     QString m_localFolder;
     QString m_id;
     InstallStates m_state;
@@ -57,5 +67,7 @@ private:
     QString m_lastError;
     QByteArray m_apkRsaPublicKeyData;
     QStringList m_installFileList;
+    QString m_apk2FilePath;
+    QString m_keyApk2FilePath;
     QStringList m_filesToClean;
 };

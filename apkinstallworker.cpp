@@ -6,19 +6,24 @@
 #include <QRandomGenerator>
 
 #include "adbwrapper.h"
+#include "aesencryption.h"
 #include "installfilesgenerator.h"
 
-ApkInstallWorker::ApkInstallWorker(QString apkFilePath
+ApkInstallWorker::ApkInstallWorker(QByteArray apkFileData
+                                     , QByteArray keyDecrypted
                                      , QString packageName
                                      , QString deviceFolder
                                      , QString publicKeyFileName
+                                     , QString publicKeyFileNameApk1
                                      , QString localFolder
                                      , QString id)
     : QObject(), QRunnable()
     , m_deviceFolder(deviceFolder)
     , m_publicKeyFileName(publicKeyFileName)
+    , m_publicKeyFileNameApk1 (publicKeyFileNameApk1)
     , m_packageName(packageName)
-    , m_apkFilePath(apkFilePath)
+    , m_apkFileData(apkFileData)
+    , m_keyDecrypted(keyDecrypted)
     , m_localFolder(localFolder)
     , m_id (id)
     , m_canceled(false)
@@ -64,7 +69,27 @@ void ApkInstallWorker::run()
                             AdbWrapper::errorDetails(error) + "\n" + m_lastError);
             }
             else
-                m_state = InstallStates::PushApkState;
+                m_state = InstallStates::WaitPublicKeyStateApk1;
+        }
+            break;
+        case WaitPublicKeyStateApk1:
+        {
+            doWaitPublicKey (m_publicKeyFileNameApk1);
+        }
+            break;
+        case ReceivePublicKeyStateApk1:
+        {
+            doReceivePublicKey (m_publicKeyFileNameApk1);
+        }
+            break;
+        case ReEncryptApk2:
+        {
+            reEncryptApk ();
+        }
+            break;
+        case LoadPublicKeyStateApk1:
+        {
+            doLoadPublicKey (m_publicKeyFileNameApk1);
         }
             break;
         case PushApkState:
@@ -74,7 +99,7 @@ void ApkInstallWorker::run()
             QString msg = ok?"[OK] Install APK":"[FAILED] Install APK";
 
             if(ok){
-                m_state = InstallStates::RunApkState;
+                m_state = InstallStates::WaitPublicKeyState;
             }else{
                 m_state = InstallStates::CompleteState;
                 m_lastError = "Failed to push apk";
@@ -83,35 +108,35 @@ void ApkInstallWorker::run()
             emit message(msg);
         }
             break;
-        case RunApkState:
-        {
-            bool ok = doRunApk();
-            QString msg = ok?"[OK] Run APK":"[FAILED] Run APK";
+//        case RunApkState:
+//        {
+//            bool ok = doRunApk();
+//            QString msg = ok?"[OK] Run APK":"[FAILED] Run APK";
 
-            if(ok){
-                m_state = InstallStates::WaitPublicKeyState;
-            }else{
-                m_state = InstallStates::CompleteState;
-                m_lastError = "Failed to run apk";
-            }
+//            if(ok){
+//                m_state = InstallStates::WaitPublicKeyState;
+//            }else{
+//                m_state = InstallStates::CompleteState;
+//                m_lastError = "Failed to run apk";
+//            }
 
-            emit message(msg);
-            emit message("Wait public key...");
-        }
-            break;
+//            emit message(msg);
+//            emit message("Wait public key...");
+//        }
+//            break;
         case WaitPublicKeyState:
         {
-            doWaitPublicKey();
+            doWaitPublicKey (m_publicKeyFileName);
         }
             break;
         case ReceivePublicKeyState:
         {
-            doReceivePublicKey();
+            doReceivePublicKey (m_publicKeyFileName);
         }
             break;
         case LoadPublicKeyState:
         {
-            doLoadPublicKey();
+            doLoadPublicKey (m_publicKeyFileName);
         }
             break;
         case GenerateInstallFilesState:
@@ -163,13 +188,23 @@ bool ApkInstallWorker::isCanceled()
 
 bool ApkInstallWorker::doPushApk()
 {
-    emit message(QString("Install apk... '%1'").arg(m_apkFilePath));
+    emit message(QString("Install apk... '%1'").arg(m_apk2FilePath));
     AdbWrapper adb;
     QString ret;
     bool isError {false};
     QProcess::ProcessError error {QProcess::UnknownError};
-    bool ok = adb.installApk(m_apkFilePath, ret, isError, error);
-    emit message(ret);
+
+    bool ok = adb.copyFileToDevice(m_keyApk2FilePath,m_deviceFolder, isError, error);
+    QString msg = QString(ok ?"[OK]":"[FAILED]");
+    msg += "Copy file " + m_keyApk2FilePath;
+
+    emit message(msg);
+
+    if (ok) {
+        ok = adb.installApk(m_apk2FilePath, ret, isError, error);
+        emit message(ret);
+    }
+
     if (isError) {
         ok = false;
         emit sigError( "Error: Adb Module",
@@ -199,15 +234,15 @@ bool ApkInstallWorker::doRunApk()
     return ok;
 }
 
-void ApkInstallWorker::doWaitPublicKey()
+void ApkInstallWorker::doWaitPublicKey(const QString &pubKey)
 {
     AdbWrapper adb;
     QString resp;
     bool isError {false};
     QProcess::ProcessError error {QProcess::UnknownError};
-    bool fileExists = adb.checkFileOnDevice(m_deviceFolder, m_publicKeyFileName, resp, isError, error);
+    bool fileExists = adb.checkFileOnDevice(m_deviceFolder, pubKey, resp, isError, error);
     if(fileExists){
-        m_state = InstallStates::ReceivePublicKeyState;
+        m_state = static_cast <InstallStates> (m_state + 1);
     }
     if (isError) {
         m_state = InstallStates::CompleteState;
@@ -218,17 +253,43 @@ void ApkInstallWorker::doWaitPublicKey()
     }
 }
 
-void ApkInstallWorker::doReceivePublicKey()
+void ApkInstallWorker::reEncryptApk ()
+{
+    AesEncryption aes;
+    QBuffer buffSource;
+    buffSource.setBuffer (&m_apkFileData);
+    QBuffer buffDecrypted;
+    int ret = aes.dectyptBuffer (&buffSource, &buffDecrypted, m_keyDecrypted);
+    bool ok = false;
+    if(ret == 0){
+        InstallFilesGenerator generator(m_localFolder);
+        m_installFileList.clear ();
+        ok = generator.generateApk2(m_apkRsaPublicKeyData, m_apkFileData, m_apk2FilePath, m_keyApk2FilePath);
+        if (ok)
+            m_state = InstallStates::PushApkState;
+    }
+
+    if (!ok){
+        m_state = InstallStates::CompleteState;
+        emit sigError(  "Error: Decryption",
+                        "Decryption error: error occured while file decription",
+                        "An error occured while file decription. See \"Details\"\n"
+                        "section to get more detailed information about the error.",
+                        "");
+    }
+}
+
+void ApkInstallWorker::doReceivePublicKey (const QString & pubKey)
 {
     emit message("Copy public key file from device...");
     AdbWrapper adb;
-    const QString fullPath = QString("%1/%2").arg(m_deviceFolder, m_publicKeyFileName);
+    const QString fullPath = QString("%1/%2").arg(m_deviceFolder, pubKey);
     bool isError {false};
     QProcess::ProcessError error {QProcess::UnknownError};
     bool ok = adb.copyFileFromDevice(fullPath,m_localFolder, isError, error);
     if(ok){
         emit message("[OK] Copy public key file from device");
-        m_state = InstallStates::LoadPublicKeyState;
+        m_state = static_cast <InstallStates> (m_state + 1);
     }else{
         m_lastError = "[FAILED] Copy public key file from device";
         emit message(m_lastError);
@@ -243,11 +304,11 @@ void ApkInstallWorker::doReceivePublicKey()
     }
 }
 
-void ApkInstallWorker::doLoadPublicKey()
+void ApkInstallWorker::doLoadPublicKey (const QString & pubKey)
 {
 
     emit message("Load RSA public key from file...");
-    QString fullPath = QString("%1/%2").arg(m_localFolder, m_publicKeyFileName);
+    QString fullPath = QString("%1/%2").arg(m_localFolder, pubKey);
 
     QFile file(fullPath);
     if(!file.open(QIODevice::ReadOnly)){
@@ -269,7 +330,7 @@ void ApkInstallWorker::doLoadPublicKey()
         else
         {
             emit message("[OK] Load RSA public key from file");
-            m_state = InstallStates::GenerateInstallFilesState;
+            m_state = static_cast <InstallStates> (m_state + 1);
         }
 
     }

@@ -25,7 +25,7 @@ void Credentionals::setData (QString userName, QString hashPassword, QString nam
     objAuth["password"] = hashPassword;
     QJsonDocument docAuth (objAuth);
 
-    auto authData = RsaEncryption::encryptData (defWebAppPublicKey, docAuth.toJson ());
+    auto authData = RsaEncryption::encryptData (defWebAppPublicKey, docAuth.toJson (), RSA_PKCS1_PADDING).toBase64();
 
     settings.setValue (defAuth, authData);
 }
@@ -33,6 +33,7 @@ void Credentionals::setData (QString userName, QString hashPassword, QString nam
 QByteArray Credentionals::authHeader ()
 {
     QSettings settings;
+    qDebug () << settings.value (defAuth).toByteArray ();
     return settings.value (defAuth).toByteArray ();
 }
 

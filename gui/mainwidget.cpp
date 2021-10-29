@@ -163,7 +163,7 @@ void MainWgt::onStart ()
     QByteArray iv;
     QString passcode;
     QString challenge;
-    InstallFilesGenerator::generateAES_en (aesKey, iv, passcode, challenge);
+    InstallFilesGenerator::generateAESPassChallenge_en (aesKey, iv, passcode, challenge);
 
     QJsonObject obj;
 
@@ -188,7 +188,7 @@ void MainWgt::onStart ()
         objB0 ["AppVer"];
         objB0 ["Brand"];
     }
-    obj ["B0"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB0).toJson ()));
+    obj ["B0"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB0).toJson (), RSA_PKCS1_PADDING));
 
     //B1
     QJsonObject objB1;
@@ -212,7 +212,7 @@ void MainWgt::onStart ()
         //??????????????
         objB0 ["ParntVerfd"];
     }
-    obj ["B1"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB1).toJson ()));
+    obj ["B1"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, QJsonDocument (objB1).toJson (), RSA_PKCS1_PADDING));
 
     obj ["B2"] = passcode;
     obj ["B3"] = challenge;

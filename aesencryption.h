@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QFile>
+#include <QBuffer>
 
 #include <openssl/evp.h>
 
@@ -18,6 +19,8 @@ public:
     AesEncryption();
 
     int dectyptFile(const QString& encodedFilePath, const QByteArray& key, const QString& decodedFilePath);
+
+    int dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByteArray& key);
 
     int decrypt(const QString& encodedFilePath, const QString& decodedFilePath, const QByteArray& key, const QByteArray& iv);
 

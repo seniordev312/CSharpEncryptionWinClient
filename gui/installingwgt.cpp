@@ -165,12 +165,14 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
     connect(reply, &QNetworkReply::finished, this, [=](){
         if(reply->error() == QNetworkReply::NoError){
             writeLog(QString("[OK] Download file"));
-            QString appFolder = qApp->applicationDirPath();
+            installApkOnDevice (reply->readAll(), key);
+            /*QString appFolder = qApp->applicationDirPath();
             QString encodedFilePath = QString("%1/%2").arg(appFolder, id);
             writeLog("Save file...");
             bool ok = saveToDisk(encodedFilePath, reply);
             if(ok){
                 writeLog(QString("[OK] Save file to:'%1'").arg(encodedFilePath));
+                installApkOnDevice ();
                 //try decrypt
                 AesEncryption aes;
 
@@ -216,7 +218,7 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
                                 "An error occured while file was saving in disk. See \"Details\"\n"
                                 "section to get more detailed information about the error.",
                                 m_output);
-            }
+            }*/
 
         }else{
             writeLog(QString("[FAILED] Download file. Err:'%1'").arg(reply->errorString()));
@@ -249,12 +251,13 @@ void InstallingWgt::writeLog(const QString &msg)
 }
 
 
-void InstallingWgt::installApkOnDevice ()
+void InstallingWgt::installApkOnDevice (const QByteArray &apkData, const QByteArray &key)
 {
     QString apkFilaPath = qApp->applicationDirPath() +"/app-release.apk";
     apkFilaPath = tmp_file;
     QString packageName = "com.example.testrsaencryption/.MainActivity";
-    QString deviceFoder = "/storage/emulated/0/.tmp";
+    QString deviceFoder = defDeviceFoder;
+    QString pubFileNameApk1 = "keyApk1.pub";
     QString pubFileName = "key.pub";
 
     QString tmpFolder = qApp->applicationDirPath()+"/tmp";
@@ -266,7 +269,7 @@ void InstallingWgt::installApkOnDevice ()
     QString localFolder = tmpFolder;
 
     if(m_worker == nullptr){
-        m_worker = new ApkInstallWorker(apkFilaPath, packageName, deviceFoder, pubFileName, localFolder, idDevice_.toUtf8());
+        m_worker = new ApkInstallWorker(apkData, key, packageName, deviceFoder, pubFileName, pubFileNameApk1, localFolder, idDevice_.toUtf8());
         connect(m_worker, &ApkInstallWorker::message, this, &InstallingWgt::writeLog, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::sigError, this, &InstallingWgt::onInstallError, Qt::QueuedConnection );
         connect(m_worker, &ApkInstallWorker::finished, this, &InstallingWgt::onCompleteWorker, Qt::QueuedConnection);
