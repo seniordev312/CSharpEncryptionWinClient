@@ -23,7 +23,7 @@ QString AdbWrapper::errorWhat (const QProcess::ProcessError &error)
 QString AdbWrapper::errorWhere ()
 {
     return "An error occured during adb.exe execution. See \"Details\"\n"
-            "section to get more detailed information about the error.";
+           "section to get more detailed information about the error.";
 }
 
 QString AdbWrapper::errorDetails (const QProcess::ProcessError & error)
@@ -33,7 +33,7 @@ QString AdbWrapper::errorDetails (const QProcess::ProcessError & error)
     {
     case QProcess::FailedToStart:
         res = "The process failed to start. Either the invoked program is missing,\n "
-                  "or you may have insufficient permissions or resources to invoke the program.";
+              "or you may have insufficient permissions or resources to invoke the program.";
         break;
     case QProcess::Crashed:
         res = "The process crashed some time after starting successfully.";
@@ -48,7 +48,7 @@ QString AdbWrapper::errorDetails (const QProcess::ProcessError & error)
         break;
     case QProcess::WriteError:
         res = "An error occurred when attempting to write to the process.\n "
-                "For example, the process may not be running, or it may have closed its input channel.";
+              "For example, the process may not be running, or it may have closed its input channel.";
         break;
     case QProcess::UnknownError:
         res = "An unknown error occurred.";
@@ -71,7 +71,7 @@ QByteArray AdbWrapper::runAdb (QStringList args, bool &isError, QProcess::Proces
     proc.start(adbPath (), args);
     proc.waitForStarted ();
     proc.waitForFinished ();
-    res = proc.readAll ();
+    res = proc.readAllStandardOutput() + proc.readAllStandardError();
     return res;
 }
 
@@ -80,6 +80,7 @@ bool AdbWrapper::waitDevice ()
     QStringList arguments;
     arguments << "wait-for-device";
     QProcess proc;
+    auto path = adbPath();
     proc.start(adbPath (), arguments);
     proc.waitForStarted ();
     bool res = proc.waitForFinished (1000);
@@ -103,7 +104,7 @@ bool AdbWrapper::checkDevices (bool & isError, QProcess::ProcessError & error)
 {
     bool res = false;
     QStringList arguments;
-    arguments<<"devices";    
+    arguments<<"devices";
     QByteArray resp = runAdb (arguments, isError, error);
     QString str = QString::fromStdString (resp.toStdString ());
     if (str.contains(QRegularExpression("device[^s]")))
@@ -250,7 +251,11 @@ bool AdbWrapper::copyFileFromDevice(const QString &deviceFile, const QString &lo
 
 QString AdbWrapper::adbPath()
 {
-    return QString("%1/platform-tool/adb.exe").arg(qApp->applicationDirPath());
+    auto path= QString("%1/platform-tools/adb").arg(qApp->applicationDirPath());
+#if defined(Q_OS_WIN32)
+    path +=".exe";
+#endif
+    return path;
 }
 
 bool AdbWrapper::installApk(const QString &apkFilePath, QString &outResp, bool & isError, QProcess::ProcessError & error)
@@ -335,7 +340,7 @@ bool AdbWrapper::checkIsCDMA (bool &isError, QProcess::ProcessError & error)
     foreach (auto set, settings) {
         auto resp = getGlobalSetting (set, isError, error);
         if (!isError)
-        responces.append (resp);
+            responces.append (resp);
     }
     if (!responces.isEmpty()) {
         isError = false;
