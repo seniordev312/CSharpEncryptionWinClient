@@ -124,9 +124,9 @@ void ApkInstallWorker::run()
             doLoadPublicKey (m_publicKeyFileNameApk1);
         }
             break;
-        case PushApkState:
+        case PushInstallFiles:
         {
-            bool ok = doPushApk();
+            bool ok = doPushInstallFiles();
 
             QString msg = ok?"[OK] Install APK":"[FAILED] Install APK";
 
@@ -140,22 +140,6 @@ void ApkInstallWorker::run()
             emit message(msg);
         }
             break;
-            //        case RunApkState:
-            //        {
-            //            bool ok = doRunApk();
-            //            QString msg = ok?"[OK] Run APK":"[FAILED] Run APK";
-
-            //            if(ok){
-            //                m_state = InstallStates::WaitPublicKeyState;
-            //            }else{
-            //                m_state = InstallStates::CompleteState;
-            //                m_lastError = "Failed to run apk";
-            //            }
-
-            //            emit message(msg);
-            //            emit message("Wait public key...");
-            //        }
-            //            break;
         case WaitPublicKeyState:
         {
             doWaitPublicKey (m_publicKeyFileName);
@@ -218,34 +202,6 @@ bool ApkInstallWorker::isCanceled()
     return m_canceled;
 }
 
-bool ApkInstallWorker::doPushApk()
-{
-    emit message(QString("Install apk... '%1'").arg(m_apk2FilePath));
-    AdbWrapper adb = AdbWrapper::Inst();
-    QString ret;
-    bool isError {false};
-    QProcess::ProcessError error {QProcess::UnknownError};
-
-    bool ok = adb.copyFileToDevice(m_keyApk2FilePath,m_deviceFolder, isError, error);
-    QString msg = QString(ok ?"[OK]":"[FAILED]");
-    msg += "Copy file " + m_keyApk2FilePath;
-
-    emit message(msg);
-
-    if (ok) {
-        ok = adb.installApk(m_apk2FilePath, ret, isError, error);
-        emit message(ret);
-    }
-
-    if (isError) {
-        ok = false;
-        emit sigError( "Error: Adb Module",
-                       AdbWrapper::errorWhat(error),
-                       AdbWrapper::errorWhere(),
-                       AdbWrapper::errorDetails(error));
-    }
-    return ok;
-}
 
 bool ApkInstallWorker::doRunApk(QString packageName)
 {
@@ -297,8 +253,10 @@ void ApkInstallWorker::reEncryptApk ()
         InstallFilesGenerator generator(m_localFolder);
         m_installFileList.clear ();
         ok = generator.generateApk2(m_apkRsaPublicKeyData, m_apkFileData, m_apk2FilePath, m_keyApk2FilePath);
+        m_installFileList << m_apk2FilePath;
+        m_installFileList << m_keyApk2FilePath;
         if (ok)
-            m_state = InstallStates::PushApkState;
+            m_state = InstallStates::PushInstallFiles;
     }
 
     if (!ok){
@@ -310,6 +268,7 @@ void ApkInstallWorker::reEncryptApk ()
                         "");
     }
 }
+
 
 void ApkInstallWorker::doReceivePublicKey (const QString & pubKey)
 {
@@ -388,7 +347,7 @@ void ApkInstallWorker::doGenerateInstallFiles()
     }
 }
 
-void ApkInstallWorker::doPushInstallFiles()
+bool ApkInstallWorker::doPushInstallFiles()
 {
     AdbWrapper adb = AdbWrapper::Inst();
     emit message("Copy install files to device...");
@@ -408,6 +367,7 @@ void ApkInstallWorker::doPushInstallFiles()
                                AdbWrapper::errorWhat(error),
                                AdbWrapper::errorWhere(),
                                AdbWrapper::errorDetails(error));
+                return false;
             }
         }
 
@@ -415,7 +375,7 @@ void ApkInstallWorker::doPushInstallFiles()
         m_installFileList.clear();
     }
 
-    m_state = InstallStates::CompleteState;
+    return true;
 }
 
 void ApkInstallWorker::clearLocalFolder()
