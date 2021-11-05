@@ -328,6 +328,53 @@ void AdbWrapper::clearFolderOnDevice(const QString &deviceFolder, QString &outRe
     outResp = resp;
 }
 
+QVector<AdbWrapper::Process> AdbWrapper::getRunningProcesses(bool &isError, QProcess::ProcessError & error)
+{
+    QVector<AdbWrapper::Process> ret;
+    QStringList arguments;
+    arguments<<"shell"<<"ps";
+    QByteArray resp = runAdb (arguments, isError, error);
+    QString strPs = QString::fromUtf8(resp);
+    QStringList psLine;
+    if (strPs.contains("\r\n")) {
+        psLine = strPs.split("\r\n");
+    }
+    else {
+        psLine = strPs.split("\n");
+    }
+    for ( const auto &ps : psLine  )
+    {
+        auto psUnit = ps.simplified().split(" ");
+        if (psUnit.length() != 9)
+            continue;
+        ret.push_back(Process(psUnit[1].toInt(), psUnit[8]));
+    }
+    ret.removeFirst();
+    return ret;
+}
+
+AdbWrapper::Process AdbWrapper::getProcessByName(QString name, bool &isError, QProcess::ProcessError & error)
+{
+    QVector<AdbWrapper::Process> psAll = getRunningProcesses(isError,error);
+    for (const auto &ps : psAll) {
+        if (ps.name == name) {
+            return ps;
+        }
+    }
+    return Process(-1,"");
+}
+
+bool AdbWrapper::killProcessByName(QString name, bool &isError, QProcess::ProcessError &error)
+{
+    QStringList arguments;
+    arguments<<"shell";
+    arguments<<"am";
+    arguments<<"kill";
+    arguments<<name;
+    QByteArray resp = runAdb (arguments, isError, error);
+    return (resp.length() == 0);
+}
+
 //use https://android.googlesource.com/platform/hardware/ril/+/master/include/telephony/ril.h#228 (349 line)
 bool AdbWrapper::checkIsCDMA (bool &isError, QProcess::ProcessError & error)
 {

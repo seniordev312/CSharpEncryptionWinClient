@@ -18,19 +18,20 @@ public:
                      , QString id);
 
     enum InstallStates { ClearDeviceFolderState
-         , StartApk1
-         , WaitPublicKeyStateApk1
-         , ReceivePublicKeyStateApk1
-         , LoadPublicKeyStateApk1
-         , ReEncryptApk2
-         , PushApkState
-         //, RunApkState
-         , WaitPublicKeyState
-         , ReceivePublicKeyState
-         , LoadPublicKeyState
-         , GenerateInstallFilesState
-         , PushInstallFilesState
-         , CompleteState };
+                         , KillApk1
+                         , StartApk1
+                         , WaitPublicKeyStateApk1
+                         , ReceivePublicKeyStateApk1
+                         , LoadPublicKeyStateApk1
+                         , ReEncryptApk2
+                         , PushApkState
+                         //, RunApkState
+                         , WaitPublicKeyState
+                         , ReceivePublicKeyState
+                         , LoadPublicKeyState
+                         , GenerateInstallFilesState
+                         , PushInstallFilesState
+                         , CompleteState };
 
     void run() override;
 

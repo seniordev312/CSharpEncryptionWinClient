@@ -1,9 +1,9 @@
 #include "aesencryption.h"
 #include <QFile>
 
-#include <QFile.h>
-#include <QString.h>
-#include <QDebug.h>
+#include <QFile>
+#include <QString>
+#include <QDebug>
 #include <openssl/ssl.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>

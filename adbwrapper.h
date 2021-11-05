@@ -7,39 +7,54 @@
 class AdbWrapper
 {
 public:
-    AdbWrapper();
+    typedef struct ps {
+        ps(int pid, QString name) : pid(pid), name(name){};
+        int pid;
+        QString name;
+    } Process;
 
-    static bool checkDevices (bool & isError, QProcess::ProcessError & error);
+    static AdbWrapper &Inst() {
+        static AdbWrapper instance;
+        return instance;
+    }
 
-    static bool ping (bool & isError, QProcess::ProcessError & error);
+    bool checkDevices (bool & isError, QProcess::ProcessError & error);
 
-    static bool waitDevice ();
+    bool ping (bool & isError, QProcess::ProcessError & error);
 
-    static QString getIMEI (bool & isError, QProcess::ProcessError & error);
+    bool waitDevice ();
 
-    static QString getManufacturer (bool & isError, QProcess::ProcessError & error);
+    QString getIMEI (bool & isError, QProcess::ProcessError & error);
 
-    static QString getModel (bool & isError, QProcess::ProcessError & error);
+    QString getManufacturer (bool & isError, QProcess::ProcessError & error);
 
-    static QString getVersion (bool & isError, QProcess::ProcessError & error);
+    QString getModel (bool & isError, QProcess::ProcessError & error);
 
-    static QString getSerialNumber (bool & isError, QProcess::ProcessError & error);
+    QString getVersion (bool & isError, QProcess::ProcessError & error);
 
-    static QString getDevicePhoneNumber (bool & isError, QProcess::ProcessError & error);
+    QString getSerialNumber (bool & isError, QProcess::ProcessError & error);
 
-    static bool copyFileToDevice(const QString& localFile, const QString deviceFolder, bool & isError, QProcess::ProcessError & error);
+    QString getDevicePhoneNumber (bool & isError, QProcess::ProcessError & error);
 
-    static bool copyFileFromDevice(const QString& deviceFile, const QString& localFolder, bool & isError, QProcess::ProcessError & error);
+    bool copyFileToDevice(const QString& localFile, const QString deviceFolder, bool & isError, QProcess::ProcessError & error);
 
-    static QString adbPath();
+    bool copyFileFromDevice(const QString& deviceFile, const QString& localFolder, bool & isError, QProcess::ProcessError & error);
 
-    static bool installApk(const QString& apkFilePath, QString& resp, bool & isError, QProcess::ProcessError & error);
+    QString adbPath();
 
-    static bool runApk(const QString& apkName, QString& outResp, bool & isError, QProcess::ProcessError & error);
+    bool installApk(const QString& apkFilePath, QString& resp, bool & isError, QProcess::ProcessError & error);
 
-    static bool checkFileOnDevice(const QString& deviceFolder, const QString& fileName, QString &outResp, bool & isError, QProcess::ProcessError & error);
+    bool runApk(const QString& apkName, QString& outResp, bool & isError, QProcess::ProcessError & error);
 
-    static void clearFolderOnDevice(const QString& deviceFolder, QString &outResp, bool & isError, QProcess::ProcessError & error);
+    bool checkFileOnDevice(const QString& deviceFolder, const QString& fileName, QString &outResp, bool & isError, QProcess::ProcessError & error);
+
+    void clearFolderOnDevice(const QString& deviceFolder, QString &outResp, bool & isError, QProcess::ProcessError & error);
+
+    QList<Process> getRunningProcesses(bool &isError, QProcess::ProcessError & error);
+
+    Process getProcessByName(QString name, bool &isError, QProcess::ProcessError & error);
+
+    bool killProcessByName(QString name, bool &isError, QProcess::ProcessError & error);
 
     //error
     static QString errorWhat (const QProcess::ProcessError & error);
@@ -48,15 +63,18 @@ public:
 
     static QString errorDetails (const QProcess::ProcessError & error);
 
+
 private:
-    static QByteArray runAdb (QStringList args, bool &isError, QProcess::ProcessError & error);
+    AdbWrapper();
 
-    static QString getProp (QString prop, bool &isError, QProcess::ProcessError & error);
+    QByteArray runAdb (QStringList args, bool &isError, QProcess::ProcessError & error);
 
-    static QString getGlobalSetting (QString setting, bool &isError, QProcess::ProcessError & error);
+    QString getProp (QString prop, bool &isError, QProcess::ProcessError & error);
 
-    static bool checkIsCDMA (bool &isError, QProcess::ProcessError & error);
+    QString getGlobalSetting (QString setting, bool &isError, QProcess::ProcessError & error);
 
-    static QString callIphonesubinfo (QString number, bool &isError, QProcess::ProcessError & error);
+    bool checkIsCDMA (bool &isError, QProcess::ProcessError & error);
+
+    QString callIphonesubinfo (QString number, bool &isError, QProcess::ProcessError & error);
 
 };

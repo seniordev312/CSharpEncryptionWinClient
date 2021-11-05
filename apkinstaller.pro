@@ -14,6 +14,7 @@ TEMPLATE = app
 TARGET = apkinstaller
 
 INCLUDEPATH += $$PWD/inc \
+                $$PWD/gui
 
 win32 {
     #QMAKE_LFLAGS_WINDOWS += "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\""
@@ -107,3 +108,17 @@ RESOURCES += \
     res.qrc
 
 #DEFINES += WEBAPI
+
+DISTFILES += \
+    gui/css/dark.css \
+    gui/icons/Step_completed.png \
+    gui/icons/Step_current.png \
+    gui/icons/Step_not_completed.png \
+    gui/icons/error.png \
+    gui/icons/question.png \
+    gui/icons/visibleOff.png \
+    gui/icons/visibleOn.png
+
+
+unix:!macx: LIBS += -L$$PWD/../../../../../../lib/ -lcrypto
+

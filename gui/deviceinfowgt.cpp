@@ -52,7 +52,7 @@ DeviceInfoWgt::DeviceInfoWgt(QWidget *parent) :
                  [this](){
             bool isError = false;
             QProcess::ProcessError error;
-            bool isConnected = AdbWrapper::ping (isError, error);
+            bool isConnected = AdbWrapper::Inst().ping (isError, error);
 
             changeProperty (ui->labelConnectionStatus_value, "Status", isConnected ? "success" : "fail");
             if (isConnected) {
@@ -179,26 +179,26 @@ DeviceInfoWgt::~DeviceInfoWgt ()
 
 void DeviceInfoWgt::waitDevice ()
 {
-    while (!AdbWrapper::waitDevice () && !isFinishThreads.load ()) {}
+    while (!AdbWrapper::Inst().waitDevice () && !isFinishThreads.load ()) {}
 }
 
 DeviceInfoWgt::DeviceInfo DeviceInfoWgt::updateDevInfo ()
 {
     DeviceInfo res;
 
-    res.isConnected = AdbWrapper::checkDevices (res.isError, res.error);
+    res.isConnected = AdbWrapper::Inst().checkDevices (res.isError, res.error);
     if (!res.isError)
-        res.imei = AdbWrapper::getIMEI (res.isError, res.error);
+        res.imei = AdbWrapper::Inst().getIMEI (res.isError, res.error);
     if (!res.isError)
-        res.manufacturer = AdbWrapper::getManufacturer (res.isError, res.error);
+        res.manufacturer = AdbWrapper::Inst().getManufacturer (res.isError, res.error);
     if (!res.isError)
-        res.model = AdbWrapper::getModel (res.isError, res.error);
+        res.model = AdbWrapper::Inst().getModel (res.isError, res.error);
     if (!res.isError)
-        res.version = AdbWrapper::getVersion (res.isError, res.error);
+        res.version = AdbWrapper::Inst().getVersion (res.isError, res.error);
     if (!res.isError)
-        res.serialNumber = AdbWrapper::getSerialNumber (res.isError, res.error);
+        res.serialNumber = AdbWrapper::Inst().getSerialNumber (res.isError, res.error);
     if (!res.isError)
-        res.devicePhoneNumber = AdbWrapper::getDevicePhoneNumber (res.isError, res.error);
+        res.devicePhoneNumber = AdbWrapper::Inst().getDevicePhoneNumber (res.isError, res.error);
 
     return res;
 }
