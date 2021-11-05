@@ -25,7 +25,7 @@ public:
 
     bool generate (QByteArray rsaPulicKey, QString id, QStringList& outList);
 
-    static bool generateApk2 (QByteArray rsaPulicKey, QByteArray apkCode, QString & apkFilePath, QString & keyFilePath);
+    bool generateApk2 (QByteArray rsaPulicKey, QByteArray apkCode, QString & apkFilePath, QString & keyFilePath);
 
 private:
     static bool encodeAES (QByteArray & aesKey, QByteArray & iv, QByteArray &src);

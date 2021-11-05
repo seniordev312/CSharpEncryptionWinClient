@@ -169,12 +169,10 @@ bool InstallFilesGenerator::generateAES256File (QByteArray rsaPulicKey, QString 
 
 bool InstallFilesGenerator::generateApk2 (QByteArray rsaPulicKey, QByteArray apkCode, QString & apkFilePath, QString & keyFilePath)
 {
-    QString folder = defDeviceFoder;
-
     QByteArray aes256Key;
     QByteArray iv;
     QStringList outList;
-    bool ok = generateAES256File (rsaPulicKey, folder, outList, aes256Key, iv);
+    bool ok = generateAES256File (rsaPulicKey, m_folder, outList, aes256Key, iv);
     keyFilePath = outList.first();
 
     if(ok)
@@ -182,7 +180,7 @@ bool InstallFilesGenerator::generateApk2 (QByteArray rsaPulicKey, QByteArray apk
         AesEncryption encryption;
 
         QString baseFileName =QString("app-release.apk");
-        QString sourceFile = QString("%1/%2").arg(folder, baseFileName);
+        QString sourceFile = QString("%1/%2").arg(m_folder, baseFileName);
         QFile file(sourceFile);
         if(file.open(QIODevice::ReadWrite)){
             QString data =apkCode;
@@ -190,7 +188,7 @@ bool InstallFilesGenerator::generateApk2 (QByteArray rsaPulicKey, QByteArray apk
             file.close();
         }
         //encode file
-        apkFilePath = QString("%1/%2.encoded").arg(folder, baseFileName);
+        apkFilePath = QString("%1/%2.encoded").arg(m_folder, baseFileName);
         ok = (encryption.encrypt(sourceFile,apkFilePath, aes256Key, iv) == 0);
         QFile::remove(sourceFile);
     }
