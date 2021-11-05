@@ -369,10 +369,10 @@ bool AdbWrapper::killProcessByName(QString name, bool &isError, QProcess::Proces
     QStringList arguments;
     arguments<<"shell";
     arguments<<"am";
-    arguments<<"kill";
+    arguments<<"force-stop";
     arguments<<name;
     QByteArray resp = runAdb (arguments, isError, error);
-    return (resp.length() == 0);
+    return (!isError);
 }
 
 //use https://android.googlesource.com/platform/hardware/ril/+/master/include/telephony/ril.h#228 (349 line)
