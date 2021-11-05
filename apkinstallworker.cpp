@@ -76,7 +76,7 @@ void ApkInstallWorker::run()
         case KillApk1:
         {
             emit message("Killing previous Apk1, if any...");
-            if (!adb.killProcessByName(defApk1Package, isError, error)) {
+            if (!adb.killProcessByName(defApk1Pkg, isError, error)) {
                 m_state = InstallStates::CompleteState;
                 m_lastError = "Failed to kill running Apk1";
                 emit sigError( "Error: Adb Module",
@@ -91,7 +91,7 @@ void ApkInstallWorker::run()
             break;
         case StartApk1:
         {
-            bool ok = doRunApk (defApk1Package);
+            bool ok = doRunApk (defApk1MainActivity);
             QString msg = ok?"[OK] Run APK":"[FAILED] Run APK";
 
             if(ok){
