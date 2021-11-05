@@ -24,7 +24,7 @@ public:
                          , ReceivePublicKeyStateApk1
                          , LoadPublicKeyStateApk1
                          , ReEncryptApk2
-                         , PushApkState
+                         , PushInstallFiles
                          //, RunApkState
                          , WaitPublicKeyState
                          , ReceivePublicKeyState
@@ -46,13 +46,12 @@ signals:
 private:
     void reEncryptApk ();
     void doWaitPublicKeyApk1();
-    bool doPushApk();
+    bool doPushInstallFiles();
     bool doRunApk (QString packageName);
     void doWaitPublicKey (const QString & pubKey);
     void doReceivePublicKey (const QString & pubKey);
     void doLoadPublicKey (const QString & pubKey);
     void doGenerateInstallFiles();
-    void doPushInstallFiles();
     void clearLocalFolder();
 
     QMutex m_cancelMutex;
