@@ -15,6 +15,7 @@ class QWidget;
 void changeProperty(QWidget * obj, const char *property, QVariant value);
 
 #define defDeviceFoder "/storage/emulated/0/.tmp"
-#define defApk1Package "com.example.testApk1/.MainActivity"
+#define defApk1MainActivity "com.example.testApk1/.MainActivity"
+#define defApk1Pkg "com.example.testApk1"
 
 #endif // UTILS_H
