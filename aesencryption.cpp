@@ -26,7 +26,7 @@ AesEncryption::AesEncryption()
 
 }
 
-int AesEncryption::dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByteArray& key)
+int AesEncryption::decryptBuffer (QBuffer &source,  QBuffer &encoded, const QByteArray& key)
 {
     qInfo()<<"aesCryptoFile...";
 
@@ -41,12 +41,12 @@ int AesEncryption::dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByt
         return -1;
     }
 
-    if (!source->open(QIODevice::ReadOnly)) {
+    if (!source.open(QIODevice::ReadOnly)) {
         qCritical() << "Open source failed";
         return false;
     }
 
-    if(!encoded->open(QIODevice::WriteOnly)){
+    if(!encoded.open(QIODevice::ReadWrite)){
         qCritical() << "Open encoded failed";
         return false;
     }
@@ -54,7 +54,7 @@ int AesEncryption::dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByt
     unsigned char iv[AES_BLOCK_SIZE];
 
     //read IV from file begin
-    int len = source->read((char*)&iv[0], AES_BLOCK_SIZE);
+    int len = source.read((char*)&iv[0], AES_BLOCK_SIZE);
     if(len < AES_BLOCK_SIZE){
         qCritical()<<"Failed to read IV";
         return -1;
@@ -67,10 +67,10 @@ int AesEncryption::dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByt
     int lastLen = 0;
     while (len>0) {
         //read data from encoded file
-        len = source->read((char*)&encodedBuffer[0], kBuffLen);
+        len = source.read((char*)&encodedBuffer[0], kBuffLen);
         if(len > 0){
             AES_cbc_encrypt(&encodedBuffer[0], &decodedBuffer[0], len, &aes, &iv[0], AES_DECRYPT);
-            encoded->write((const char*)&decodedBuffer[0],len);
+            encoded.write((const char*)&decodedBuffer[0],len);
             lastLen = len;
         }
     }
@@ -79,16 +79,17 @@ int AesEncryption::dectyptBuffer (QBuffer *source,  QBuffer *encoded, const QByt
     unsigned char unpadding = decodedBuffer[lastLen - 1];
     qInfo()<<"unpadding:"<<unpadding;
     if(unpadding > 0){
-        qint64 fileLen = encoded->size();
+        qint64 fileLen = encoded.size();
         qint64 fileLenUn = fileLen - unpadding;
         qInfo()<<"fileLen:"<<fileLen<<" fileLenUn:"<<fileLenUn;
-        QByteArray newBuffer = encoded->data();
-        newBuffer.resize (fileLenUn);
-        encoded->setBuffer(&newBuffer);
+        QByteArray unpaddingData = encoded.data().left(fileLenUn);
+        encoded.buffer().clear();
+        encoded.seek(0);
+        encoded.write(unpaddingData);
     }
 
-    source->close();
-    encoded->close();
+    source.close();
+    encoded.close();
 
     return 0;
 }
