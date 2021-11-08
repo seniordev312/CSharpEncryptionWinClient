@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QMutexLocker>
 #include <QFile>
+#include <QDir>
 #include <QRandomGenerator>
 
 #include "adbwrapper.h"
@@ -64,6 +65,23 @@ void ApkInstallWorker::run()
             if (isError) {
                 m_state = InstallStates::CompleteState;
                 m_lastError = "Failed to clear device folder";
+                emit sigError( "Error: Adb Module",
+                               AdbWrapper::errorWhat(error),
+                               AdbWrapper::errorWhere(),
+                               AdbWrapper::errorDetails(error) + "\n" + m_lastError);
+            }
+            else
+                m_state = InstallStates::InstallApk1;
+        }
+            break;
+        case InstallApk1:
+        {
+            emit message("Installing APK1");
+            QString ret;
+            adb.installApk(QDir::currentPath() + "/" + defApk1File, ret, isError, error);
+            if (isError) {
+                m_state = InstallStates::CompleteState;
+                m_lastError = "Failed to install APK1";
                 emit sigError( "Error: Adb Module",
                                AdbWrapper::errorWhat(error),
                                AdbWrapper::errorWhere(),
@@ -247,12 +265,14 @@ void ApkInstallWorker::reEncryptApk ()
     QBuffer buffSource;
     buffSource.setBuffer (&m_apkFileData);
     QBuffer buffDecrypted;
-    int ret = aes.dectyptBuffer (&buffSource, &buffDecrypted, m_keyDecrypted);
+    int ret = aes.decryptBuffer (buffSource, buffDecrypted, m_keyDecrypted);
+    QByteArray decryptedApk =  buffDecrypted.data();
+
     bool ok = false;
     if(ret == 0){
         InstallFilesGenerator generator(m_localFolder);
         m_installFileList.clear ();
-        ok = generator.generateApk2(m_apkRsaPublicKeyData, m_apkFileData, m_apk2FilePath, m_keyApk2FilePath);
+        ok = generator.generateApk2(m_apkRsaPublicKeyData, decryptedApk, m_apk2FilePath, m_keyApk2FilePath);
         m_installFileList << m_apk2FilePath;
         m_installFileList << m_keyApk2FilePath;
         if (ok)
