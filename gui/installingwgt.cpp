@@ -165,7 +165,8 @@ void InstallingWgt::runDownloadFile(const QString &id, const QByteArray &key)
     connect(reply, &QNetworkReply::finished, this, [=](){
         if(reply->error() == QNetworkReply::NoError){
             writeLog(QString("[OK] Download file"));
-            installApkOnDevice (reply->readAll(), key);
+            QByteArray encodedApk = reply->readAll();
+            installApkOnDevice (encodedApk, key);
             /*QString appFolder = qApp->applicationDirPath();
             QString encodedFilePath = QString("%1/%2").arg(appFolder, id);
             writeLog("Save file...");

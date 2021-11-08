@@ -95,6 +95,9 @@ func encryptHandler(w http.ResponseWriter, r *http.Request) {
 		aesKeyEncoded, _ := rsa.EncryptOAEP(sh, rand.Reader, rsaPublicKey, aesKey, nil)
 
 		//Encode to base64 encoded string
+		log.Printf(hex.EncodeToString(aesKey))
+		log.Printf("AES-base64:%s", string(base64.StdEncoding.EncodeToString(aesKey)))
+		log.Printf("AESenc-base64:%s", string(base64.StdEncoding.EncodeToString(aesKeyEncoded)))
 		apkResponse := &ApkResponse{Key: base64.StdEncoding.EncodeToString(aesKeyEncoded), Id: encodedFilePath}
 
 		w.Header().Set("Content-type", "application/json")

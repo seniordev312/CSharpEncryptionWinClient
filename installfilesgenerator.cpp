@@ -155,7 +155,7 @@ bool InstallFilesGenerator::generateAES256File (QByteArray rsaPulicKey, QString 
     QByteArray encryptedAes256Key = RsaEncryption::encryptData(rsaPulicKey, iv);
 
     //Save to file
-    QString aesFilePath = QString("%1/aes.key.encoded").arg(folder);
+    QString aesFilePath = QString("%1/aes.key").arg(folder);
     QFile aesFile(aesFilePath);
     bool ok = aesFile.open(QIODevice::WriteOnly);
     if(ok){
@@ -188,8 +188,7 @@ bool InstallFilesGenerator::generateApk2 (QByteArray rsaPulicKey, QByteArray apk
         QString sourceFile = QString("%1/%2").arg(m_folder, baseFileName);
         QFile file(sourceFile);
         if(file.open(QIODevice::ReadWrite)){
-            QString data =apkCode;
-            file.write(data.toLatin1());
+            file.write(apkCode);
             file.close();
         }
         //encode file
