@@ -18,6 +18,7 @@ public:
                      , QString id);
 
     enum InstallStates { ClearDeviceFolderState
+                         , InstallApk1
                          , KillApk1
                          , StartApk1
                          , WaitPublicKeyStateApk1
