@@ -60,7 +60,7 @@ private:
     QString m_publicKeyFileName;
     QString m_publicKeyFileNameApk1;
     QString m_packageName;
-    QByteArray m_apkFileData;
+    QByteArray m_apkDataEncrypted;
     QByteArray m_keyDecrypted;
     QString m_localFolder;
     QString m_id;

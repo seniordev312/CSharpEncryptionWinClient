@@ -68,14 +68,14 @@ bool SignWgt::eventFilter (QObject *watched, QEvent *event)
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         if (ui->lineEditInvitationCode == watched) {
             if (Qt::Key_Return == keyEvent->key ()
-                && ui->pushButtonInvitationCode->isEnabled ()) {
+                    && ui->pushButtonInvitationCode->isEnabled ()) {
                 onSend ();
                 return true;
             }
         }
         else {
             if (Qt::Key_Return == keyEvent->key ()
-                && ui->pushButtonSignUp->isEnabled ()) {
+                    && ui->pushButtonSignUp->isEnabled ()) {
                 onSignUp ();
                 return true;
             }
@@ -109,7 +109,7 @@ void SignWgt::onSignUp ()
     auto email = ui->lineEditUsername->text ();
     auto password = ui->lineEditPassword->text ();
     auto hashPassw = QCryptographicHash::hash(password.toUtf8(),
-                     QCryptographicHash::Sha256).toHex();
+                                              QCryptographicHash::Sha256).toHex();
     auto name = ui->lineEditName->text ();
 
     //send to WebApp
@@ -133,10 +133,10 @@ void SignWgt::onSignUp ()
         connect(reply, &QNetworkReply::finished, this, [=](){
             if(reply->error() != QNetworkReply::NoError){
                 emit sigError   ("Error setting password for user " + ui->lineEditUsername->text (),
-                                "Webapp error: error occured during sending post to WebApp",
-                                "An error occured during sending requests to WebApp. See \"Details\"\n"
-                                "section to get more detailed information about the error.",
-                                reply->errorString());
+                                 "Webapp error: error occured during sending post to WebApp",
+                                 "An error occured during sending requests to WebApp. See \"Details\"\n"
+                                 "section to get more detailed information about the error.",
+                                 reply->errorString());
             }
             else {
                 //store locally
@@ -185,6 +185,10 @@ void SignWgt::onSend ()
     QNetworkRequest request (url);
     request.setHeader (QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader ("Type", "1");
+
+    ui->pushButtonInvitationCode->setEnabled(false);
+    ui->pushButtonInvitationCode->setText("Sending...");
+    onlyInviationView(false,true);
     QNetworkReply* reply = m_manager->post (request, docEnctypted.toJson ());
 
     auto code = ui->lineEditInvitationCode->text ();
@@ -195,24 +199,34 @@ void SignWgt::onSend ()
             auto resp = reply->readAll ();
             auto doc = QJsonDocument::fromJson (resp);
             auto obj = doc.object ();
-            if (true ==  obj ["Valid"].toBool ()) {
+            bool success = false;
+            if (obj.contains("Valid")) {
+                if ((obj["Valid"].isString() && obj["Valid"].toString("").toUpper() == "TRUE") ||
+                        (obj["Valid"].isBool() && obj["Valid"].toBool())) {
+                    success = true;
+                }
+            }
+            if (success) {
                 ui->lineEditUsername->setText (obj ["Username"].toString ());
                 ui->lineEditName->setText (obj ["Name"].toString ());
                 code_ = code;
             }
 
-            onlyInviationView (obj["Valid"].toBool());
-            QMessageBox::information (this, "Success", "Password Successfully Set");
+            onlyInviationView (success);
+            if (success)
+                QMessageBox::information (this, "Success", "Password Successfully Set");
         }else{
             auto resp = reply->readAll ();
             emit sigError   ("Error: WebApp",
-                            "Webapp error: error occured during checking invitation in WebApp",
-                            "An error occured during sending requests to WebApp. See \"Details\"\n"
-                            "section to get more detailed information about the error.",
-                            reply->errorString() + resp);
+                             "Webapp error: error occured during checking invitation in WebApp",
+                             "An error occured during sending requests to WebApp. See \"Details\"\n"
+                             "section to get more detailed information about the error.",
+                             reply->errorString() + resp);
             onlyInviationView (false);
         }
         reply->deleteLater();
+        ui->pushButtonInvitationCode->setEnabled(true);
+        ui->pushButtonInvitationCode->setText("Send");
     });
 #endif
 }

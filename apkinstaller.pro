@@ -1,5 +1,6 @@
 QT += widgets core gui network
 QT += concurrent
+DEFINES += WEBAPI
 
 # Enable c++17
 win32-msvc* {
@@ -107,7 +108,7 @@ FORMS += \
 RESOURCES += \
     res.qrc
 
-#DEFINES += WEBAPI
+
 
 DISTFILES += \
     gui/css/dark.css \

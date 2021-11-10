@@ -24,7 +24,7 @@ ApkInstallWorker::ApkInstallWorker(QByteArray apkFileData
     , m_publicKeyFileName(publicKeyFileName)
     , m_publicKeyFileNameApk1 (publicKeyFileNameApk1)
     , m_packageName(packageName)
-    , m_apkFileData(apkFileData)
+    , m_apkDataEncrypted(apkFileData)
     , m_keyDecrypted(keyDecrypted)
     , m_localFolder(localFolder)
     , m_id (id)
@@ -263,7 +263,7 @@ void ApkInstallWorker::reEncryptApk ()
 {
     AesEncryption aes;
     QBuffer buffSource;
-    buffSource.setBuffer (&m_apkFileData);
+    buffSource.setBuffer (&m_apkDataEncrypted);
     QBuffer buffDecrypted;
     int ret = aes.decryptBuffer (buffSource, buffDecrypted, m_keyDecrypted);
     QByteArray decryptedApk =  buffDecrypted.data();
