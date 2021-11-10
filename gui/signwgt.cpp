@@ -213,8 +213,6 @@ void SignWgt::onSend ()
             }
 
             onlyInviationView (success);
-            if (success)
-                QMessageBox::information (this, "Success", "Password Successfully Set");
         }else{
             auto resp = reply->readAll ();
             emit sigError   ("Error: WebApp",
@@ -244,8 +242,9 @@ void SignWgt::checkConditionsSignUp ()
 
     bool containsChar = false;
     for (int i=0; i<password.size (); i++) {
-        if (password.at (i).isLetter ())
+        if (password.at (i).isLetter ()) {
             containsChar = true;
+        }
     }
 
     if (!ui->checkBoxTermsPrivacy->isChecked ())
@@ -299,3 +298,4 @@ void SignWgt::onlyInviationView (bool activated, bool init)
     }
 
 }
+
