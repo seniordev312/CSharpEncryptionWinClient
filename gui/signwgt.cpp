@@ -240,13 +240,19 @@ void SignWgt::checkConditionsSignUp ()
 
     auto password = ui->lineEditPassword->text();
 
-    bool containsChar = false;
-    for (int i=0; i<password.size (); i++) {
-        if (password.at (i).isLetter ()) {
-            containsChar = true;
-        }
-    }
+    QRegularExpression symbol("[^A-Za-z0-9]");
+    QRegularExpressionMatch matchSymbol = symbol.match(password);
+    QRegularExpression num("[0-9]");
+    QRegularExpressionMatch matchNum = num.match(password);
+    QRegularExpression alphaUp("[A-Z]");
+    QRegularExpressionMatch matchAlphaUp = alphaUp.match(password);
+    QRegularExpression alphaLo("[a-z]");
+    QRegularExpressionMatch matchAlphaLo = alphaLo.match(password);
 
+    bool containsSymbol = (matchSymbol.hasMatch());
+    bool containsNumber = (matchNum.hasMatch());
+    bool containsUpperAlpa = (matchAlphaUp.hasMatch());
+    bool containsLoweAlpha = (matchAlphaLo.hasMatch());
     if (!ui->checkBoxTermsPrivacy->isChecked ())
         canSignUp = false;
     else if (password.length() < 7) {
@@ -254,9 +260,7 @@ void SignWgt::checkConditionsSignUp ()
         changeProperty (ui->labelPasswordStatus, "Status", "fail");
         ui->labelPasswordStatus->setText ("Less than 7 symbols");
     }
-    else if (!password.contains (QRegularExpression ("[0-9]"))
-             || !password.contains (QRegularExpression ("!@#$%^&()*"))
-             || !containsChar) {
+    else if (!containsSymbol || !containsNumber || !containsUpperAlpa || !containsLoweAlpha) {
         canSignUp = false;
         changeProperty (ui->labelPasswordStatus, "Status", "fail");
         ui->labelPasswordStatus->setText ("Must contain alphanumeric, upper and lower casing, special characters");
