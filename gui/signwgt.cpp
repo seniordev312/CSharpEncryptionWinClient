@@ -109,7 +109,7 @@ void SignWgt::onSignUp ()
     auto email = ui->lineEditUsername->text ();
     auto password = ui->lineEditPassword->text ();
     auto hashPassw = QCryptographicHash::hash(password.toUtf8(),
-                                              QCryptographicHash::Sha256).toHex();
+                                              QCryptographicHash::Sha512).toHex();
     auto name = ui->lineEditName->text ();
 
     //send to WebApp
@@ -121,14 +121,14 @@ void SignWgt::onSignUp ()
         QJsonDocument doc(obj);
 
         QJsonObject objEncrypted;
-        objEncrypted["Load"] = QString (RsaEncryption::encryptData (defWebAppPublicKey, doc.toJson (), RSA_PKCS1_PADDING));
+        objEncrypted["Load"] = QString(RsaEncryption::encryptData(defWebAppPublicKey, doc.toJson (), RSA_PKCS1_PADDING).toBase64());
         QJsonDocument docEnctypted (objEncrypted);
 
         const QUrl url(defWebAppEndpoint);
         QNetworkRequest request(url);
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         request.setRawHeader ("Type", "2");
-        QNetworkReply* reply = m_manager->post (request, docEnctypted.toJson ());
+        QNetworkReply* reply = m_manager->post (request, docEnctypted.toJson (QJsonDocument::Compact));
 
         connect(reply, &QNetworkReply::finished, this, [=](){
             if(reply->error() != QNetworkReply::NoError){
@@ -136,7 +136,7 @@ void SignWgt::onSignUp ()
                                  "Webapp error: error occured during sending post to WebApp",
                                  "An error occured during sending requests to WebApp. See \"Details\"\n"
                                  "section to get more detailed information about the error.",
-                                 reply->errorString());
+                                 QString(reply->readAll()) + " " + reply->errorString());
             }
             else {
                 //store locally
@@ -214,12 +214,11 @@ void SignWgt::onSend ()
 
             onlyInviationView (success);
         }else{
-            auto resp = reply->readAll ();
             emit sigError   ("Error: WebApp",
                              "Webapp error: error occured during checking invitation in WebApp",
                              "An error occured during sending requests to WebApp. See \"Details\"\n"
                              "section to get more detailed information about the error.",
-                             reply->errorString() + resp);
+                              QString(reply->readAll()) + " " + reply->errorString());
             onlyInviationView (false);
         }
         reply->deleteLater();

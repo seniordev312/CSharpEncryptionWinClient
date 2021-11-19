@@ -17,12 +17,12 @@ AdbWrapper::AdbWrapper()
 QString AdbWrapper::errorWhat (const QProcess::ProcessError &error)
 {
     QMetaEnum metaEnum = QMetaEnum::fromType<QProcess::ProcessError>();
-    return QString("adb.") + metaEnum.valueToKey(error) + ": error occured in adb.exe";
+    return QString("adb.") + metaEnum.valueToKey(error) + ": error occured in ADB";
 }
 
 QString AdbWrapper::errorWhere ()
 {
-    return "An error occured during adb.exe execution. See \"Details\"\n"
+    return "An error occured during ADB execution. See \"Details\"\n"
            "section to get more detailed information about the error.";
 }
 
