@@ -262,7 +262,7 @@ bool AdbWrapper::installApk(const QString &apkFilePath, QString &outResp, bool &
 {
     QStringList arguments;
     arguments<<"install";
-    arguments<<"-g";
+    arguments<<"-t";
     arguments<<apkFilePath;
     QByteArray resp = runAdb (arguments, isError, error);
     QString r = resp;
